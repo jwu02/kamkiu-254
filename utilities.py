@@ -5,7 +5,7 @@ import os
 import random
 import pandas as pd
 from PyQt6.QtWidgets import (
-    QMessageBox
+    QMessageBox, QFileDialog
 )
 
 # Get last two digits of current year as a string
@@ -302,7 +302,7 @@ def extract_chemical_composition_data(df: pd.DataFrame, compositions: list[str])
 
 
 def extract_ageing_qrcode_data(df: pd.DataFrame) -> pd.DataFrame:
-    df = df[[
+    df_filtered = df[[
         '型号',
         '生产挤压批',
         '铝棒炉号',
@@ -311,14 +311,14 @@ def extract_ageing_qrcode_data(df: pd.DataFrame) -> pd.DataFrame:
         '熔铸批号',
     ]]
 
-    df.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
-    df.reset_index(drop=True, inplace=True)
+    df_filtered.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
+    df_filtered.reset_index(drop=True, inplace=True)
 
     return df
 
 
 def extract_process_card_qrcode_data(df: pd.DataFrame) -> pd.DataFrame:
-    df = df[[
+    df_filtered = df[[
         '型号',
         '挤压批号',
         '炉号',
@@ -326,11 +326,10 @@ def extract_process_card_qrcode_data(df: pd.DataFrame) -> pd.DataFrame:
         '二维码',
     ]]
 
-    df.rename(columns={'sfc': '时效批'}, inplace=True)
-    df['时效批'] = df['时效批'].apply(lambda x: x[:8])
+    df_filtered.rename(columns={'sfc': '时效批'}, inplace=True)
+    df_filtered['时效批'] = df_filtered['时效批'].apply(lambda x: x[:8])
 
     return df
-
 
 def show_error(msg: str):
     # Create and show a warning message box

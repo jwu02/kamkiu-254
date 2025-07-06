@@ -10,17 +10,11 @@ from PyQt6.QtWidgets import (
 from MultiSelectionTable import MultiSelectionTable
 
 from utilities import (
-    transform_extrusion_batch_code,
-    CheckStatus,
-    SAMPLE_TYPES,
     load_cpk_tolerance_map,
     check_cpk_conformance,
     MODEL_CODE_MAPPINGS,
     find_files_with_substring,
     get_report_name,
-    MODEL_CODE_ORDER,
-    extract_location,
-    extract_customer,
     format_date,
     generate_random_weights,
     get_batch_quantity_by_furnace_code,
@@ -120,6 +114,11 @@ class KamKiu254(QMainWindow):
         self.fill_ageing_batch_button.clicked.connect(self.extract_ageing_batch_qrcode)
         self.other_functionalities_layout.addWidget(self.fill_ageing_batch_button)
 
+        # 对下报告数量
+        self.check_batch_quantity_button = QPushButton("对数量")
+        self.check_batch_quantity_button.clicked.connect(self.check_batch_quantity)
+        self.other_functionalities_layout.addWidget(self.check_batch_quantity_button)
+
         self.main_table = MultiSelectionTable()
 
         layout = QVBoxLayout()
@@ -193,7 +192,7 @@ class KamKiu254(QMainWindow):
         model_code = row['型号']
         extrusion_batch_code = row['挤压批号']
         furnace_code = row['炉号']
-        batch_quantity = get_batch_quantity_by_furnace_code(self.df_shipment_batch , row)
+        batch_quantity = get_batch_quantity_by_furnace_code(self.df_shipment_batch, row)
 
         cpk_path_str = MODEL_CODE_MAPPINGS[model_code]['cpk']['path']
         num_rows_to_extract = MODEL_CODE_MAPPINGS[model_code]['cpk']['num_rows']
@@ -215,7 +214,7 @@ class KamKiu254(QMainWindow):
             )
 
             # Define template and output paths
-            template_file = f"./report_templates/{model_code}.xlsx"  # Original template
+            template_file = f"./报告模板/{model_code}.xlsx"  # Original template
             output_name = get_report_name(
                 model_code,
                 MODEL_CODE_MAPPINGS[model_code]['customer_part_code'],
@@ -304,7 +303,10 @@ class KamKiu254(QMainWindow):
     def setDesiredElements(self):
         try:
             self.df_chemical_composition_limits = pd.read_csv("./data/成分_元素条件.csv")
-            self.df_chemical_composition_limits = self.df_chemical_composition_limits.astype({ '上限': float, '下限': float })
+            self.df_chemical_composition_limits = self.df_chemical_composition_limits.astype({ 
+                '上限': float, 
+                '下限': float 
+            })
         except Exception as e:
             show_error(f"读取文件出错: {str(e)}")
     
@@ -328,7 +330,7 @@ class KamKiu254(QMainWindow):
                 df = pd.read_csv(file_path)
                 self.df_ageing_qrcode = extract_ageing_qrcode_data(df)
 
-                self.display_dataframe(self.df_ageing_qrcode)
+                # self.display_dataframe(self.df_ageing_qrcode)
                 
             except Exception as e:
                 self.ageing_qrcode_path_label.setText(f"读取文件出错: {str(e)}")
@@ -347,7 +349,7 @@ class KamKiu254(QMainWindow):
                 df = pd.read_csv(file_path)
                 self.df_process_card_qrcode = extract_process_card_qrcode_data(df)
 
-                self.display_dataframe(self.df_process_card_qrcode)
+                # self.display_dataframe(self.df_process_card_qrcode)
                 
             except Exception as e:
                 self.process_card_qrcode_path_label.setText(f"读取文件出错: {str(e)}")
@@ -489,6 +491,35 @@ class KamKiu254(QMainWindow):
         
         self.display_dataframe(self.df_shipment_batch)
         self.display_report_generation_buttons()
+
+    def check_batch_quantity(self):
+        """
+        报选定文件夹各个型号的发货数量
+        """
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Select Directory",
+            os.path.expanduser("~"),
+            # QFileDialog.ShowDirsOnly
+        )
+        if not folder:
+            return
+
+        # List files (non-recursive)
+        files = [
+            fname for fname in os.listdir(folder)
+            if os.path.isfile(os.path.join(folder, fname)) and 'MANCHESTER' in fname
+        ]
+
+        batch_quantities = {}
+        for s in files:
+            _, model_code, _, quantity, _, _, _ = s.split()
+            if model_code not in batch_quantities:
+                batch_quantities[model_code] = int(quantity)
+            else:
+                batch_quantities[model_code] += int(quantity)
+        
+        show_info('\n'.join(f"{k}: {v}" for k, v in batch_quantities.items()))
 
 
 if __name__ == "__main__":
