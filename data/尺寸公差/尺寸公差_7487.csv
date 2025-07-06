@@ -1,0 +1,79 @@
+﻿SPC,FAI,项目,标准值,上公差,下公差
+SPC A-1,FAI 1-1,Thickness,17.11,0.15,0.15
+SPC A-2,FAI 1-2,Thickness,17.11,0.15,0.15
+SPC C,FAI 3,Distance,0.7,0.15,0.15
+SPC D,FAI 4,Distance,8.9,0.15,0.15
+SPC E-1,FAI 5-1,Thickness,6.96,0.15,0.15
+SPC E-2,FAI 5-2,Thickness,6.96,0.15,0.15
+SPC H-1,FAI 8-1,Distance,28.65,0.15,0.15
+SPC H-2,FAI 8-2,Distance,28.65,0.15,0.15
+SPC I,FAI 9,Width,81.56,0.15,0.15
+SPC J,FAI 10-1,Perpendicularity,0,0.2,0
+SPC J,FAI 10-2,Perpendicularity,0,0.2,0
+SPC L-1,FAI 12-1,Parallelism,0,0.15,0
+SPC L-2,FAI 12-2,Parallelism,0,0.15,0
+SPC N,FAI13,Line Profile(K＞L),0,0.12,0
+SPC N-MAX,FAI 13-MAX,"Line Profile (K＞L),MAX",0,0.06,0.06
+SPC N-MIN,FAI 13-MIN,"Line Profile(K＞L), MIN",0,0.06,0.06
+SPC N,FAI14,Line Profile(K＞L),0,0.3,0
+SPC N-MAX,FAI 14-MAX,"Line Profile (K＞L),MAX",0,0.15,0.15
+SPC N-MIN,FAI 14-MIN,"Line Profile(K＞L), MIN",0,0.15,0.15
+SPC O,FAI 15,Line Profile(N＞A),0,0.3,0
+SPC O-MAX,FAI 15-MAX,"Line Profile (N＞A), MAX",0,0.15,0.15
+SPC O-MIN,FAI 15-MIN,"Line Profile (N＞A),MIN",0,0.15,0.15
+SPC O,FAI 16,Line Profile(N＞A),0,0.3,0
+SPC O-MAX,FAI 16-MAX,"Line Profile (N＞A), MAX",0,0.15,0.15
+SPC O-MIN,FAI 16-MIN,"Line Profile (N＞A),MIN",0,0.15,0.15
+SPC Q,FAI 17,Line Profile(H>J),0,0.3,
+SPC Q-MAX,FAI 17-MAX,"Line Profile (H>J),MAX",0,0.15,0.15
+SPC Q-MIN,FAI 17-MIN,"Line Profile (H>J),MIN",0,0.15,0.15
+SPC O,FAI 18,Line Profile(N＞A),0,0.3,0
+SPC O-MAX,FAI 18-MAX,"Line Profile (N＞A), MAX",0,0.15,0.15
+SPC O-MIN,FAI 18-MIN,"Line Profile (N＞A),MIN",0,0.15,0.15
+SPC S,FAI 19,Line Profile(F>G),0,0.3,
+SPC S-MAX,FAI 19-MAX,"Line Profile (F>G),MAX",0,0.15,0.15
+SPC S-MIN,FAI 19-MIN,"Line Profile (F>G),MIN",0,0.15,0.15
+SPC N,FAI20,Line Profile(K＞L),0,0.12,0
+SPC N-MAX,FAI 20-MAX,"Line Profile (K＞L),MAX",0,0.06,0.06
+SPC N-MIN,FAI 20-MIN,"Line Profile(K＞L), MIN",0,0.06,0.06
+SPC U,FAI 21,Line Profile(E>F),0,0.3,
+SPC U-MAX,FAI 21-MAX,"Line Profile(E>F),MAX",0,0.15,0.15
+SPC U-MIN,FAI 21-MIN,"Line Profile (E>F),MIN",0,0.15,0.15
+SPC O,FAI 22,Line Profile(N＞A),0,0.3,0
+SPC O-MAX,FAI 22-MAX,"Line Profile (N＞A), MAX",0,0.15,0.15
+SPC O-MIN,FAI 22-MIN,"Line Profile (N＞A),MIN",0,0.15,0.15
+SPC W,FAI 23,Line Profile(L>M),0,0.3,
+SPC W-MAX,FAI 23-MAX,"Line Profile(L>M), MAX",0,0.15,0.15
+SPC W-MIN,FAI 23-MIN,"Line Profile(L>M), MIN",0,0.15,0.15
+SPC O,FAI 24,Line Profile(N＞A),0,0.3,0
+SPC O-MAX,FAI 24-MAX,"Line Profile (N＞A), MAX",0,0.15,0.15
+SPC O-MIN,FAI 24-MIN,"Line Profile (N＞A),MIN",0,0.15,0.15
+SPC Y,FAI 25,Line Profile(D>E),0,0.3,
+SPC Y-MAX,FAI 25-MAX,"Line Profile(D>E),MAX",0,0.15,0.15
+SPC Y-MIN,FAI 25-MIN,"Line Profile(D>E), MIN",0,0.15,0.15
+SPC Z-1,FAI 26-1,Distance,32.13,0.15,0.15
+SPC Z-2,FAI 26-2,Distance,32.13,0.15,0.15
+SPC AB-1,FAI 28-1,Radius,1.5,0.15,0.15
+SPC AB-2,FAI 28-2,Radius,1.5,0.15,0.15
+SPC AB-3,FAI 28-3,Radius,1.5,0.15,0.15
+SPC AB-4,FAI 28-4,Radius,1.5,0.15,0.15
+SPC AC-1,FAI 29-1,Distance,8.65,0.15,0.15
+SPC AC-2,FAI 29-2,Distance,8.65,0.15,0.15
+SPC AD,FAI 30,Surface Profile,0,0.12,0
+SPC AD-MAX,FAI 30-MAX,Surface Profile MAX,0,0.06,0.06
+SPC AD-MIN,FAI 30-MIN,Surface Profile MIN,0,0.06,0.06
+SPC AE-1,FAI 31-1,Cutting Length,9.72,0.15,0.15
+SPC AE-2,FAI 31-2,Cutting Length,9.72,0.15,0.15
+SPC AE-3,FAI 31-3,Cutting Length,9.72,0.15,0.15
+SPC AE-4,FAI 31-4,Cutting Length,9.72,0.15,0.15
+SPC AF,FAI 32,Perpendicularly,0,0.1,0
+SPC AG,FAI 33,Parallelism,0,0.14,0
+SPC AQ,FAI 43,2D barcode location,4.3,0.8,0.8
+SPC AI,FAI 35,2D barcode size,4,0.38,0.38
+SPC B,FAI 2,2D barcode location,23.71,0.8,0.8
+SPC A,FAI 1,2D barcode size,4,0.38,0.38
+SPC AP-1,FAI 42-1,Radius,3.2,0.15,0.15
+SPC AP-2,FAI 42-2,Radius,3.2,0.15,0.15
+,FAI 47,V-groove  location,4.8,0.15,0.15
+,FAI 48,V-groove location,3.9,0.15,0.15
+,FAI 49,V-groove depth,0.4,0.15,0.15

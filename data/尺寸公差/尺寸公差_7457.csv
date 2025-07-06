@@ -1,0 +1,67 @@
+﻿SPC,FAI,项目,标准值,上公差,下公差
+SPC AL,FAI 1,2D Barcode code width,4,0.38,0.38
+SPC A-1,FAI 2-1,Thickness,17.16,0.15,0.15
+SPC A-2,FAI 2-2,Thickness,17.16,0.15,0.15
+SPC B,FAI 3,Thickness,14.41,0.15,0.15
+SPC C-1,FAI 4-1,Thickness,5.8,0.15,0.15
+SPC C-2,FAI 4-2,Thickness,5.8,0.15,0.15
+SPC D-1,FAI 5-1,Cutting length,10.68,0.15,0.15
+SPC D-2,FAI 5-2,Cutting length,10.68,0.15,0.15
+SPC D-3,FAI 5-3,Cutting length,10.68,0.15,0.15
+SPC D-4,FAI 5-4,Cutting length,10.68,0.15,0.15
+SPC F-1,FAI 7-1,Distance,40.78,0.15,0.15
+SPC F-2,FAI 7-2,Distance,40.78,0.15,0.15
+SPC G,FAI 8,Distance,7.21,0.15,0.15
+SPC H,FAI 9,Distance,19.31,0.15,0.15
+SPC O-1,FAI 10-1,Perpendicularity,0,0.2,0
+SPC O-2,FAI 10-2,Perpendicularity,0,0.2,0
+SPC M,FAI 13,Perpendicularity,0,0.1,0
+SPC N,FAI 14,Surface Profile,0,0.12,0
+SPC N-MAX,FAI 14-MAX,Surface Profile MAX,0,0.06,0.06
+SPC N-MIN,FAI 14-MIN,Surface Profile MIN,0,0.06,0.06
+SPC I,FAI 15,Width,79.56,0.15,0.15
+SPC P,FAI 16,Line Profile(B＞C),0,0.3,0
+SPC P-MAX,FAI 16-MAX,"Line Profile(B＞C),MAX",0,0.15,0.15
+SPC P-MIN,FAI 16-MIN,"Line Profile(B＞C),MIN",0,0.15,0.15
+SPC Q,FAI 17,Line Profile(A＞B),0,0.12,0
+SPC Q-MAX,FAI 17-MAX,"Line Profile((A＞B),MAX",0,0.06,0.06
+SPC Q-MIN,FAI 17-MIN,"Line Profile(A＞B),MIN",0,0.06,0.06
+SPC R,FAI 18,Line Profile(C＞D),0,0.3,0
+SPC R-MAX,FAI 18-MAX,"Line Profile(C＞D),MAX",0,0.15,0.15
+SPC R-MIN,FAI 18-MIN,"Line Profile(C＞D),MIN",0,0.15,0.15
+SPC S,FAI 19,Line Profile(D＞E),0,0.3,0
+SPC S-MAX,FAI 19-MAX,"Line Profile(D＞E),MAX",0,0.15,0.15
+SPC S-MIN,FAI 19-MIN,"Line Profile(D＞E),MIN",0,0.15,0.15
+SPC T,FAI 20,Line Profile(E＞F),0,0.3,0
+SPC T-MAX,FAI 20-MAX,"Line Profile(E＞F),MAX",0,0.15,0.15
+SPC T-MIN,FAI 20-MIN,"Line Profile(E＞F),MIN",0,0.15,0.15
+SPC U,FAI 21,Line Profile(G＞H),0,0.3,0
+SPC U-MAX,FAI 21-MAX,"Line Profile(G＞H),MAX",0,0.15,0.15
+SPC U-MIN,FAI 21-MIN,"Line Profile(G＞H),MIN",0,0.15,0.15
+SPC V,FAI 22,Line Profile(J＞K),0,0.3,0
+SPC V-MAX,FAI 22-MAX,"Line Profile(J＞K),MAX",0,0.15,0.15
+SPC V-MIN,FAI 22-MIN,"Line Profile(J＞K),MIN",0,0.15,0.15
+SPC W,FAI 23,Line Profile(H＞J),0,0.3,0
+SPC W-MAX,FAI 23-MAX,"Line Profile(H＞J),MAX",0,0.15,0.15
+SPC W-MIN,FAI 23-MIN,"Line Profile(H＞J),MIN",0,0.15,0.15
+SPC X,FAI 24,Line Profile(J＞K),0,0.3,0
+SPC X-MAX,FAI 24-MAX,"Line Profile(J＞K),MAX",0,0.15,0.15
+SPC X-MIN,FAI 24-MIN,"Line Profile(J＞K),MIN",0,0.15,0.15
+SPC Y,FAI 25,Line Profile(M＞A),0,0.3,0
+SPC Y-MAX,FAI 25-MAX,"Line Profile(M＞A),MAX",0,0.15,0.15
+SPC Y-MIN,FAI 25-MIN,"Line Profile(M＞A),MIN",0,0.15,0.15
+SPC Z,FAI 26,Line Profile(K＞L),0,0.3,0
+SPC Z-MAX,FAI 26-MAX,"Line Profile(K＞L),MAX",0,0.15,0.15
+SPC Z-MIN,FAI 26-MIN,"Line Profile(K＞L),MIN",0,0.15,0.15
+SPC AA,FAI 27,Line Profile(L＞M),0,0.3,0
+SPC AA-MAX,FAI 27-MAX,"Line Profile(L＞M),MAX",0,0.15,0.15
+SPC AA-MIN,FAI 27-MIN,"Line Profile(L＞M),MIN",0,0.15,0.15
+SPC AC,FAI 29,2D Barcode code height,4,0.38,0.38
+SPC AD,FAI 30,2D Barcode code location,2.26,0.8,0.8
+SPC AE,FAI 31,2D Barcode code location,26.51,0.8,0.8
+SPC AF,FAI 32,Parallelism,0,0.14,0
+SPC AG,FAI 33,Distance,27.14,0.15,0.15
+SPC AH,FAI 34,Distance,12.4,0.15,0.15
+SPC AI,FAI 35,Distance,21.61,0.15,0.15
+SPC AJ,FAI 36,Distance,2.82,0.15,0.15
+SPC AK,FAI 37,Distance,16.63,0.15,0.15
