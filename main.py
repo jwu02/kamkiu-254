@@ -21,6 +21,15 @@ from utilities import (
     MODEL_CODE_ORDER,
     extract_location,
     extract_customer,
+    format_date,
+    generate_random_weights,
+    get_batch_quantity_by_furnace_code,
+    extract_shipment_batch_data,
+    extract_chemical_composition_data,
+    extract_process_card_qrcode_data,
+    extract_ageing_qrcode_data,
+    show_info,
+    show_error,
 )
 
 # https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
@@ -39,6 +48,8 @@ class KamKiu254(QMainWindow):
         self.df_process_card_qrcode = None
 
         self.cpk_tolerance_map = load_cpk_tolerance_map()
+        self.setDesiredElements()
+        self.setDesiredSampleTypes()
 
         self.init_ui()
         
@@ -137,41 +148,7 @@ class KamKiu254(QMainWindow):
             self.shipment_path_label.setText(f"{file_path}")
             try:
                 df = pd.read_csv(file_path)
-
-                self.df_shipment_batch = df.reindex(columns=[
-                    '地区',
-                    '项目',
-                    '发货数',
-                    '发货日期',
-                    '型号',
-                    '挤压批号', # 第二列 挤压批号（有两列）
-                    '挤压批（二维码）',
-                    '炉号',
-                    '熔铸批号',
-                    '时效批号',
-                    '时效批次（二维码）',
-                    '客户'
-                ])
-                
-                # Apply to DataFrame
-                self.df_shipment_batch['时效批号（sfc）'] = self.df_shipment_batch['时效批号'].apply(lambda x: x+'*')
-
-                # self.df_shipment_batch['客户/地区'] = self.df_shipment_batch['客户/地区'].apply(normalize_group_key)
-                self.df_shipment_batch['地区'] = df['客户/地区'].apply(extract_location)
-                self.df_shipment_batch['客户'] = df['客户/地区'].apply(extract_customer)
-                self.df_shipment_batch['挤压批号'] = self.df_shipment_batch['挤压批号'].apply(transform_extrusion_batch_code)
-
-                self.df_shipment_batch['型号'] = pd.Categorical(
-                    self.df_shipment_batch['型号'], 
-                    categories=MODEL_CODE_ORDER, 
-                    ordered=True
-                )
-                self.df_shipment_batch.sort_values(by=['地区', '客户', '型号', '炉号', '发货数', '挤压批号', '时效批号'], inplace=True)
-                self.df_shipment_batch.reset_index(drop=True, inplace=True)
-
-                self.df_shipment_batch['CPK'] = CheckStatus.NOT_CHECKED.value
-                self.df_shipment_batch['性能'] = CheckStatus.NOT_CHECKED.value
-                self.df_shipment_batch['成分'] = CheckStatus.NOT_CHECKED.value
+                self.df_shipment_batch = extract_shipment_batch_data(df)
 
                 self.display_dataframe(self.df_shipment_batch)
                 self.display_report_generation_buttons()
@@ -199,7 +176,7 @@ class KamKiu254(QMainWindow):
         self.main_table.insertColumn(num_table_cols)
         # Set the column header
         self.main_table.setHorizontalHeaderItem(num_table_cols, QTableWidgetItem("操作"))
-
+        
         for index, row in self.df_shipment_batch.iterrows():
             # Create a button for the third column
             button = QPushButton('生成报告')
@@ -215,21 +192,20 @@ class KamKiu254(QMainWindow):
         """
         model_code = row['型号']
         extrusion_batch_code = row['挤压批号']
+        furnace_code = row['炉号']
+        batch_quantity = get_batch_quantity_by_furnace_code(self.df_shipment_batch , row)
 
         cpk_path_str = MODEL_CODE_MAPPINGS[model_code]['cpk']['path']
         num_rows_to_extract = MODEL_CODE_MAPPINGS[model_code]['cpk']['num_rows']
 
         matching_files = find_files_with_substring(cpk_path_str, extrusion_batch_code)
 
-        # print(f"===========INDEX {index}============")
-        # print(row)
-
         file_count = len(matching_files)
         if file_count > 0:
             cpk_path = os.path.join(cpk_path_str, matching_files[0])
 
-            # ================ get data from existing CPK files
-            df = pd.read_excel(
+            # Read data from existing CPK datasheet
+            df_cpk_datasheet = pd.read_excel(
                 cpk_path,
                 engine='openpyxl',
                 header=None,  # No headers (since we're reading raw cells)
@@ -243,12 +219,12 @@ class KamKiu254(QMainWindow):
             output_name = get_report_name(
                 model_code,
                 MODEL_CODE_MAPPINGS[model_code]['customer_part_code'],
-                row['发货数'],
-                'xx',
-                row['炉号'],
+                batch_quantity,
+                row['地区'],
+                furnace_code,
                 extrusion_batch_code
             )
-            output_dir = r'.\output' # Where to save reports
+            output_dir = './output' # Where to save reports
             output_file = os.path.join(output_dir, f"{output_name}.xlsx")
             
             # Check if output directory exists, create if not
@@ -258,19 +234,49 @@ class KamKiu254(QMainWindow):
             # if df.shape[0] > 64 or df.shape[1] > 11:
             #     show_error("Extracted data is too large for the target range")
             #     return
-                
+            
             # Load the template workbook
             wb = load_workbook(template_file)
-            ws = wb.active  # or specify a specific sheet
+            ws = wb.active
+
+            # Fill in basic report information
+            ws.cell(row=3, column= 14, value=model_code) # 填 型号
+            ws.cell(row=4, column=3, value=format_date(row['发货日期'])) # 填 发货日期
+            ws.cell(row=4, column=7, value=MODEL_CODE_MAPPINGS[model_code]['schema_code']) # 填 图号
+            ws.cell(row=4, column=11, value=row['炉号']) # 填 炉号
+            ws.cell(row=4, column=14, value=batch_quantity)# 填 发货数
+            ws.cell(row=4, column=19, value=MODEL_CODE_MAPPINGS[model_code]['customer_part_code']) # 填 客户料号
             
-            # Write DataFrame to target range
-            for r_idx, row_data in enumerate(df.values, start=12):  # Start at row 12
+            # Write CPK data to report template
+            for r_idx, row_data in enumerate(df_cpk_datasheet.values, start=12):  # Start at row 12
                 for c_idx, value in enumerate(row_data, start=9):  # Start at column I (9)
                     ws.cell(row=r_idx, column=c_idx, value=value)
             
-            # Save as new file
-            wb.save(output_file)
-            show_error(f"Report successfully saved as {output_file}")
+            # Write chemical composition data to report template
+            if self.df_chemical_composition is None:
+                show_error("请上传 化学成分 数据")
+                return
+            else:
+                compositions = self.df_chemical_composition_limits['成分'].tolist()
+                df_chemical_composition_filtered = self.df_chemical_composition[self.df_chemical_composition['炉号'] == furnace_code]
+                if df_chemical_composition_filtered.empty:
+                    show_error(f"找不到 对应 炉号 {furnace_code} 的数据")
+                else:
+
+                    composition_data = df_chemical_composition_filtered.iloc[0].reindex(compositions)
+                    for r_idx, value in enumerate(composition_data, start=MODEL_CODE_MAPPINGS[model_code]['composition']['start_row']):
+                        ws.cell(row=r_idx, column=MODEL_CODE_MAPPINGS[model_code]['composition']['start_column'], value=round(float(value), 4))
+
+            weights = generate_random_weights(model_code)
+            # Weight cell starting values / coordinates
+            weight_starting_row = MODEL_CODE_MAPPINGS[model_code]['weight']['starting_row']
+            weight_starting_column = MODEL_CODE_MAPPINGS[model_code]['weight']['starting_column']
+            for c_index, weight_val in enumerate(weights, start=weight_starting_column):
+                ws.cell(row=weight_starting_row, column=c_index, value=weight_val)
+
+            wb.save(output_file) # Save as new file
+
+            show_info(f"报告成功生成：{output_file}")
         else:
             show_error("对应的 CPK 不存在")
     
@@ -279,9 +285,6 @@ class KamKiu254(QMainWindow):
         """
         上传 化学成分
         """
-        self.setDesiredElements()
-        self.setDesiredSampleTypes()
-
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Open CSV File", "", "CSV Files (*.csv)"
         )
@@ -290,19 +293,10 @@ class KamKiu254(QMainWindow):
             self.composition_path_label.setText(f"{file_path}")
             try:
                 df = pd.read_csv(file_path)
-
                 compositions = self.df_chemical_composition_limits['成分'].tolist()
+                self.df_chemical_composition = extract_chemical_composition_data(df, compositions)
 
-                self.df_chemical_composition = df.reindex(columns=['炉号', '类型', *compositions])
-                self.df_chemical_composition['Mn+Cr'] = 0
-                self.df_chemical_composition = self.df_chemical_composition[self.df_chemical_composition['类型'].isin(SAMPLE_TYPES)]
-                self.df_chemical_composition = self.df_chemical_composition.replace('-', pd.NA).dropna(how='any')
-
-                self.df_chemical_composition.sort_values(by=['炉号', '类型'], ascending=[True, False], inplace=True)
-                self.df_chemical_composition.reset_index(drop=True, inplace=True)
-                self.df_chemical_composition['Mn+Cr'] = round(self.df_chemical_composition['Mn'].astype(float) + self.df_chemical_composition['Cr'].astype(float), 5)
-
-                self.display_dataframe(self.df_chemical_composition)
+                # self.display_dataframe(self.df_chemical_composition)
                 
             except Exception as e:
                 self.composition_path_label.setText(f"读取文件出错: {str(e)}")
@@ -332,18 +326,7 @@ class KamKiu254(QMainWindow):
             self.ageing_qrcode_path_label.setText(f"{file_path}")
             try:
                 df = pd.read_csv(file_path)
-
-                self.df_ageing_qrcode = df[[
-                    '型号',
-                    '生产挤压批',
-                    '铝棒炉号',
-                    '内部时效批',
-                    '挤压批',
-                    '熔铸批号',
-                ]]
-
-                self.df_ageing_qrcode.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
-                self.df_ageing_qrcode.reset_index(drop=True, inplace=True)
+                self.df_ageing_qrcode = extract_ageing_qrcode_data(df)
 
                 self.display_dataframe(self.df_ageing_qrcode)
                 
@@ -362,17 +345,7 @@ class KamKiu254(QMainWindow):
             self.process_card_qrcode_path_label.setText(f"{file_path}")
             try:
                 df = pd.read_csv(file_path)
-
-                self.df_process_card_qrcode = df[[
-                    '型号',
-                    '挤压批号',
-                    '炉号',
-                    'sfc',
-                    '二维码',
-                ]]
-
-                self.df_process_card_qrcode.rename(columns={'sfc': '时效批'}, inplace=True)
-                self.df_process_card_qrcode['时效批'] = self.df_process_card_qrcode['时效批'].apply(lambda x: x[:8])
+                self.df_process_card_qrcode = extract_process_card_qrcode_data(df)
 
                 self.display_dataframe(self.df_process_card_qrcode)
                 
@@ -436,7 +409,7 @@ class KamKiu254(QMainWindow):
 
             # check if corresponding furnace
             df = self.df_chemical_composition[
-                (self.df_chemical_composition['炉号'] == furnace_code)
+                self.df_chemical_composition['炉号'] == furnace_code
             ]
 
             if len(df)>0:
@@ -516,16 +489,6 @@ class KamKiu254(QMainWindow):
         
         self.display_dataframe(self.df_shipment_batch)
         self.display_report_generation_buttons()
-
-
-def show_error(msg: str):
-    # Create and show a warning message box
-    msg_box = QMessageBox()
-    msg_box.setIcon(QMessageBox.Icon.Warning)
-    msg_box.setText(msg)
-    msg_box.setWindowTitle("注意")
-    msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
-    msg_box.exec()
 
 
 if __name__ == "__main__":

@@ -2,6 +2,11 @@ from datetime import datetime
 from enum import Enum
 import pandas as pd
 import os
+import random
+import pandas as pd
+from PyQt6.QtWidgets import (
+    QMessageBox
+)
 
 # Get last two digits of current year as a string
 year_suffix = str(datetime.now().year)[-2:]  # '25' for 2025
@@ -58,42 +63,65 @@ class CheckStatus(Enum):
 MODEL_CODE_MAPPINGS = {
     'KAP-7457上U-A76-50': {
         'cpk': {
-            'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7457',
+            # 'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7457',
+            'path': './test_files/cpk_datasheets/7457',
             'tolerance': './data/尺寸公差/尺寸公差_7457.csv',
             'num_rows': 51, # Num rows to copy from CPK datasheet
         },
         'schema_code': '806-55322-04',
         'customer_part_code': '18242741-00',
         'composition': {
+            # Starting cell coordinates to write to template report file
             'start_row': 81, # 从第81行开始粘贴数据
             'start_column': 9, # 从第9列（I）开始黏贴数据
-        }
+        },
+        'weight': {
+            'lower_limit': 291,
+            'upper_limit': 299,
+            # Starting cell coordinates to write to template report file
+            'starting_row': 108,
+            'starting_column': 9, # I
+        },
     },
     'KAP-7461中板-A76-50': {
         'cpk': {
-            'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7461',
+            # 'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7461',
+            'path': './test_files/cpk_datasheets/7461',
             'tolerance': './data/尺寸公差/尺寸公差_7461.csv',
-            'num_rows': 56, # Num rows to copy from CPK datasheet
+            'num_rows': 56,
         },
         'schema_code': '806-55327-09',
         'customer_part_code': '18242780-00',
         'composition': {
-            'start_row': 96, # 从第96行开始粘贴数据
-            'start_column': 9, # 从第9列（I）开始黏贴数据
-        }
+            'start_row': 96,
+            'start_column': 9,
+        },
+        'weight': {
+            'lower_limit': 2572,
+            'upper_limit': 2585,
+            'starting_row': 123,
+            'starting_column': 9,
+        },
     },
     'KAP-7487下U-A76-50': {
         'cpk': {
-            'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7487',
+            # 'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7487',
+            'path': './test_files/cpk_datasheets/7487',
             'tolerance': './data/尺寸公差/尺寸公差_7487.csv',
-            'num_rows': 64, # Num rows to copy from CPK datasheet
+            'num_rows': 64,
         },
         'schema_code': '806-55323-05',
         'customer_part_code': '18242767-00',
         'composition': {
-            'start_row': 94, # 从第94行开始粘贴数据
-            'start_column': 9, # 从第9列（I）开始黏贴数据
-        }
+            'start_row': 94,
+            'start_column': 9,
+        },
+        'weight': {
+            'lower_limit': 221,
+            'upper_limit': 229,
+            'starting_row': 121,
+            'starting_column': 9,
+        },
     },
 }
 
@@ -122,6 +150,8 @@ def get_sample_size(batch_size):
     elif batch_size <= 150000: sample_size = 500
     elif batch_size <= 500000: sample_size = 800
     else: sample_size = 1250
+
+    return f"{sample_size} pcs"
 
 def load_cpk_tolerance_map():
     df_cpk_7457 = pd.read_csv('./data/尺寸公差/尺寸公差_7457.csv')
@@ -188,3 +218,134 @@ def find_files_with_substring(directory, substring):
         if substring.lower() in filename.lower():
             matching_files.append(filename)
     return matching_files
+
+
+def format_date(s: str) -> str:
+    # Parse it into a datetime object
+    dt = datetime.strptime(s, "%Y-%m-%d")
+    formatted = dt.strftime("%Y/%m/%d").replace("/0", "/")
+
+    return formatted
+
+def generate_random_weights(model_code) -> list[str]:
+    lower_limit = MODEL_CODE_MAPPINGS[model_code]['weight']['lower_limit']
+    upper_limit = MODEL_CODE_MAPPINGS[model_code]['weight']['upper_limit']
+
+    weights = []
+
+    for i in range(3):
+        w = round(random.randint(lower_limit, upper_limit)/10, 3)
+        weights.append(f'{w}g')
+
+    return weights
+
+def get_batch_quantity_by_furnace_code(df: pd.DataFrame, row: pd.Series) -> int:
+    df_filtered = df[
+        (df['地区'] == row['地区']) &
+        (df['客户'] == row['客户']) &
+        (df['型号'] == row['型号']) &
+        (df['炉号'] == row['炉号'])
+    ]
+
+    return df_filtered['发货数'].sum()
+
+def extract_shipment_batch_data(df: pd.DataFrame) -> pd.DataFrame:
+    df_shipment_batch = df.reindex(columns=[
+        '地区',
+        '项目',
+        '发货数',
+        '发货日期',
+        '型号',
+        '挤压批号', # 第二列 挤压批号（有两列）
+        '挤压批（二维码）',
+        '炉号',
+        '熔铸批号',
+        '时效批号',
+        '时效批次（二维码）',
+        '客户'
+    ])
+    
+    # Apply to DataFrame
+    df_shipment_batch['时效批号（sfc）'] = df_shipment_batch['时效批号'].apply(lambda x: x+'*')
+
+    # self.df_shipment_batch['客户/地区'] = self.df_shipment_batch['客户/地区'].apply(normalize_group_key)
+    df_shipment_batch['地区'] = df['客户/地区'].apply(extract_location)
+    df_shipment_batch['客户'] = df['客户/地区'].apply(extract_customer)
+    df_shipment_batch['挤压批号'] = df_shipment_batch['挤压批号'].apply(transform_extrusion_batch_code)
+
+    df_shipment_batch['型号'] = pd.Categorical(
+        df_shipment_batch['型号'], 
+        categories=MODEL_CODE_ORDER, 
+        ordered=True
+    )
+    df_shipment_batch.sort_values(by=['地区', '客户', '型号', '炉号', '发货数', '挤压批号', '时效批号'], inplace=True)
+    df_shipment_batch.reset_index(drop=True, inplace=True)
+
+    df_shipment_batch['CPK'] = CheckStatus.NOT_CHECKED.value
+    df_shipment_batch['性能'] = CheckStatus.NOT_CHECKED.value
+    df_shipment_batch['成分'] = CheckStatus.NOT_CHECKED.value
+
+    return df_shipment_batch
+
+
+def extract_chemical_composition_data(df: pd.DataFrame, compositions: list[str]) -> pd.DataFrame:
+    df = df.reindex(columns=['炉号', '类型', *compositions])
+    df['Mn+Cr'] = 0
+    df = df[df['类型'].isin(SAMPLE_TYPES)]
+    df = df.replace('-', pd.NA).dropna(how='any')
+
+    df.sort_values(by=['炉号', '类型'], ascending=[True, False], inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    df['Mn+Cr'] = round(df['Mn'].astype(float) + df['Cr'].astype(float), 5)
+
+    return df
+
+
+def extract_ageing_qrcode_data(df: pd.DataFrame) -> pd.DataFrame:
+    df = df[[
+        '型号',
+        '生产挤压批',
+        '铝棒炉号',
+        '内部时效批',
+        '挤压批',
+        '熔铸批号',
+    ]]
+
+    df.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
+    return df
+
+
+def extract_process_card_qrcode_data(df: pd.DataFrame) -> pd.DataFrame:
+    df = df[[
+        '型号',
+        '挤压批号',
+        '炉号',
+        'sfc',
+        '二维码',
+    ]]
+
+    df.rename(columns={'sfc': '时效批'}, inplace=True)
+    df['时效批'] = df['时效批'].apply(lambda x: x[:8])
+
+    return df
+
+
+def show_error(msg: str):
+    # Create and show a warning message box
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Icon.Warning)
+    msg_box.setText(msg)
+    msg_box.setWindowTitle("注意")
+    msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    msg_box.exec()
+
+def show_info(msg: str):
+    # Create and show a warning message box
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Icon.Information)
+    msg_box.setText(msg)
+    msg_box.setWindowTitle("信息")
+    msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    msg_box.exec()
