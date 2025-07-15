@@ -12,6 +12,8 @@ from constants import (
     OQC_RETENTION_SAMPLE_CODES,
     SCHEMA_CODE,
     CUSTOMER_PART_CODE,
+    PART_NAME,
+    CUSTOMER_CODE_EN,
 )
 
 class DataExtractor:
@@ -168,3 +170,31 @@ class DataExtractor:
         df_filtered['时效批'] = df_filtered['时效批'].apply(lambda x: x[:8])
 
         return df_filtered
+    
+    def extract_customer_shipment_details(self, df_shipment_batch: pd.DataFrame) -> pd.DataFrame:
+        print(df_shipment_batch['发货日期'])
+        df_customer_shipment_details = df_shipment_batch.reindex(columns=[
+            '客户料号',
+            '品名',
+            '发货日期',
+            '挤压批号',
+            '挤压批（二维码）',
+            '发货数',
+            '炉号',
+            '熔铸批号',
+            '型材厂商',
+            'Makeup',
+            '标签',
+            '阶段',
+            '地区',
+            '客户',
+        ])
+
+        df_customer_shipment_details['品名'] = df_shipment_batch['型号'].map(PART_NAME)
+        df_customer_shipment_details['型材厂商'] = 'KAP'
+        df_customer_shipment_details['Makeup'] = '50% prime + 50% IP'
+        df_customer_shipment_details['标签'] = ''
+        df_customer_shipment_details['阶段'] = 'MP'
+        df_customer_shipment_details['客户'] = df_customer_shipment_details['客户'].map(CUSTOMER_CODE_EN)
+
+        return df_customer_shipment_details

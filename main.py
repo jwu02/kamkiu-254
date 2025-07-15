@@ -14,13 +14,16 @@ from DataExtractor import DataExtractor
 from utilities import (
     load_cpk_tolerance_map,
     check_cpk_conformance,
-    MODEL_CODE_MAPPINGS,
     find_files_with_substrings,
     show_info,
     show_error,
     condense_row,
     get_mechanical_electrical_df_mask,
     get_metallographic_df_mask,
+)
+
+from constants import (
+    MODEL_CODE_MAPPINGS,
 )
 
 # https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
@@ -51,6 +54,8 @@ class KamKiu254(QMainWindow):
         self.u_part_report_functional_requirements = None
         self.load_report_functional_requirements()
 
+        self.df_customer_shipment_details = None
+
         self.init_ui()
         
 
@@ -73,7 +78,7 @@ class KamKiu254(QMainWindow):
 
         # 上传 wtdmx 数据 
         self.functional_properties_ageing_filter_layout = QHBoxLayout()
-        self.functional_properties_ageing_filter_layout.addWidget(QLabel("性能（按时效批号搜索）："))
+        self.functional_properties_ageing_filter_layout.addWidget(QLabel("性能 - 硬度、电导率、拉伸（按时效批号搜索）："))
         self.function_ageing_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
         self.functional_properties_ageing_filter_layout.addWidget(self.function_ageing_path_label)
         self.function_ageing_filter_button = QPushButton(self.UPLOAD_CSV)
@@ -83,7 +88,7 @@ class KamKiu254(QMainWindow):
 
         # 上传 wtdmx 数据
         self.functional_properties_furnace_filter_layout = QHBoxLayout()
-        self.functional_properties_furnace_filter_layout.addWidget(QLabel("性能（按熔铸炉号搜索）："))
+        self.functional_properties_furnace_filter_layout.addWidget(QLabel("性能 - 金相（按熔铸炉号搜索）："))
         self.function_furnace_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
         self.functional_properties_furnace_filter_layout.addWidget(self.function_furnace_path_label)
         self.function_furance_upload_button = QPushButton(self.UPLOAD_CSV)
@@ -148,6 +153,10 @@ class KamKiu254(QMainWindow):
         self.generate_all_reports_button = QPushButton("生成全部报告")
         self.generate_all_reports_button.clicked.connect(self.generate_all_reports)
         self.other_functionalities_layout.addWidget(self.generate_all_reports_button)
+
+        self.generate_customer_shipment_details_button = QPushButton("生成客户出货明细")
+        self.generate_customer_shipment_details_button.clicked.connect(self.generate_customer_shipment_details)
+        self.other_functionalities_layout.addWidget(self.generate_customer_shipment_details_button)
 
         self.main_table = MultiSelectionTable()
 
@@ -396,7 +405,7 @@ class KamKiu254(QMainWindow):
         try:
             self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
         except Exception as e:
-            return
+            print(e)
         
         error_path = []
 
@@ -439,7 +448,7 @@ class KamKiu254(QMainWindow):
             self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
             self.check_data_uploaded(self.df_chemical_composition, "请上传 化学成分 数据")
         except Exception as e:
-            return
+            print(e)
         
         for index, row in self.df_shipment_batch.iterrows():
             furnace_code = row['炉号']
@@ -478,7 +487,7 @@ class KamKiu254(QMainWindow):
             self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
             self.check_data_uploaded(self.df_ageing_qrcode, "请上传 型材时效二维码 数据")
         except Exception as e:
-            return
+            print(e)
 
         for index, row in self.df_shipment_batch.iterrows():
             model_code = row['型号']
@@ -507,7 +516,7 @@ class KamKiu254(QMainWindow):
             self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
             self.check_data_uploaded(self.df_process_card_qrcode, "请上传 流程卡二维码记录 数据")
         except Exception as e:
-            return
+            print(e)
             
         for index, row in self.df_shipment_batch.iterrows():
             model_code = row['型号']
@@ -556,6 +565,17 @@ class KamKiu254(QMainWindow):
         
         show_info('\n'.join(f"{k}: {v}" for k, v in batch_quantities.items()))
 
+
+    def generate_customer_shipment_details(self):
+        try:
+            self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
+            self.check_data_uploaded(self.df_process_card_qrcode, "请上传 流程卡二维码记录 数据")
+
+            self.df_customer_shipment_details = self.data_extractor.extract_customer_shipment_details(self.df_shipment_batch)
+
+            self.display_dataframe(self.df_customer_shipment_details)
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

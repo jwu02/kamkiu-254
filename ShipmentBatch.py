@@ -11,7 +11,6 @@ from errors import (
 )
 
 from utilities import (
-    MODEL_CODE_MAPPINGS,
     find_files_with_substrings,
     condense_row,
     get_mechanical_electrical_df_mask,
@@ -19,6 +18,7 @@ from utilities import (
 )
 
 from constants import (
+    MODEL_CODE_MAPPINGS,
     REPORT_OUTPUT_PATH,
     OQC_RETENTION_SAMPLE_CODES,
     PART_NAME,
@@ -99,7 +99,7 @@ class ShipmentBatch:
         ws = wb.active
         
         ws = self.report_basic_information(ws, total_batch_quantity)
-        # ws = self.report_cpk(ws)
+        ws = self.report_cpk(ws)
         ws = self.report_functional_properties(
             ws, 
             df_functional_properties,
@@ -243,6 +243,7 @@ class ShipmentBatch:
                         else:
                             # BRUTE FORCE APPROACH: Manually add alternative points
                             if test_group=='维氏硬度' and point=='C2':
+                                print(f"{test_group} {point}")
                                 alternative_condition &= (df_functional_properties['点位'] == 'S1')
                                 matched = df_functional_properties[alternative_condition]
                                 if not matched.empty:
@@ -250,6 +251,7 @@ class ShipmentBatch:
                                     df_result.at[row_key, sample_code] = value
                             
                             if test_group=='铝合金金相显微组织' and point=='S7':
+                                print(f"{test_group} {point}")
                                 alternative_condition &= (df_functional_properties['点位'] == 'S10')
                                 matched = df_functional_properties[alternative_condition]
                                 if not matched.empty:
@@ -257,6 +259,7 @@ class ShipmentBatch:
                                     df_result.at[row_key, sample_code] = value
                             
                             if test_group=='铝合金金相显微组织' and point=='S8':
+                                print(f"{test_group} {point}")
                                 alternative_condition &= (df_functional_properties['点位'] == 'S13')
                                 matched = df_functional_properties[alternative_condition]
                                 if not matched.empty:

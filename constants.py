@@ -12,6 +12,11 @@ customer_match = {
     '金属': '无锡比亚迪',
 }
 
+CUSTOMER_CODE_EN = {
+    '无锡精密': 'EPZ',
+    '无锡比亚迪': 'Metal',
+}
+
 location_match = {
     '华阳': 'HY',
     '郎克斯': 'LKS',
@@ -33,8 +38,8 @@ REPORT_OUTPUT_PATH = './报告输出'
 MODEL_CODE_MAPPINGS = {
     'KAP-7457上U-A76-50': {
         'cpk': {
-            # 'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7457',      # CPK路径
-            'path': './test_files/cpk_datasheets/7457',
+            'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7457',      # CPK路径
+            # 'path': './test_files/cpk_datasheets/7457',
             'tolerance': './data/尺寸公差/尺寸公差_7457.csv',                            # CPK尺寸公差 来检查CPK合不合格（未有此检查功能，用不到）
             'num_rows': 51,                                                             # 从CPK数据表复制多少行数据
         },
@@ -57,8 +62,8 @@ MODEL_CODE_MAPPINGS = {
     },
     'KAP-7461中板-A76-50': {
         'cpk': {
-            # 'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7461',
-            'path': './test_files/cpk_datasheets/7461',
+            'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7461',
+            # 'path': './test_files/cpk_datasheets/7461',
             'tolerance': './data/尺寸公差/尺寸公差_7461.csv',
             'num_rows': 56,
         },
@@ -79,8 +84,8 @@ MODEL_CODE_MAPPINGS = {
     },
     'KAP-7487下U-A76-50': {
         'cpk': {
-            # 'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7487',
-            'path': './test_files/cpk_datasheets/7487',
+            'path': r'\\192.168.3.18\品质qe小组\A-PM\254\CPK\EVT\发货\新版\7487',
+            # 'path': './test_files/cpk_datasheets/7487',
             'tolerance': './data/尺寸公差/尺寸公差_7487.csv',
             'num_rows': 64,
         },
