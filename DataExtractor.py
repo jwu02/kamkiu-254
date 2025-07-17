@@ -17,7 +17,9 @@ from constants import (
 )
 
 class DataExtractor:
-    def extract_shipment_batch_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def extract_shipment_batch_data(self, file_path: str) -> pd.DataFrame:
+        df = pd.read_csv(file_path)
+
         df_shipment_batch = df.reindex(columns=[
             '地区',
             '项目',
@@ -49,8 +51,8 @@ class DataExtractor:
         df_shipment_batch['合金'] = '7R03'
         df_shipment_batch['回收比'] = '50%'
         df_shipment_batch['挤压批号'] = df_shipment_batch['挤压批号'].apply(self.transform_extrusion_batch_code)
-        df_shipment_batch['模号'] = ''
-        df_shipment_batch['时效炉'] = ''
+        df_shipment_batch['模号'] = df_shipment_batch['挤压批号'].apply(self.extract_die_code)
+        df_shipment_batch['时效炉'] = df_shipment_batch['时效批号'].apply(lambda model_code: model_code[3:5])
         df_shipment_batch['客户料号'] = df_shipment_batch['型号'].apply(lambda model_code: CUSTOMER_PART_CODE[model_code])
         df_shipment_batch['客户批号'] = ''
         df_shipment_batch['时效批号（sfc）'] = df_shipment_batch['时效批号'].apply(lambda x: x+'*')
@@ -96,7 +98,16 @@ class DataExtractor:
 
         return xx + die_code + extrusion_date
 
-    def extract_functional_properties_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def extract_die_code(self, extrusion_batch_code: str) -> str:
+        die_code = extrusion_batch_code[2:6]
+        if die_code[0] == '0':
+            die_code = die_code[1:]
+        
+        return die_code
+
+    def extract_functional_properties_data(self, file_path: str) -> pd.DataFrame:
+        df = pd.read_excel(file_path)
+
         df_functional_properties = df[[
             '检测项目',
             '型号',
@@ -130,20 +141,24 @@ class DataExtractor:
 
         return df_functional_properties
     
-    def extract_chemical_composition_data(self, df: pd.DataFrame, compositions: list[str]) -> pd.DataFrame:
-        df = df.reindex(columns=['炉号', '类型', *compositions])
-        df['Mn+Cr'] = 0
-        df = df[df['类型'].isin(SAMPLE_TYPES)]
-        df = df.replace('-', pd.NA).dropna(how='any')
+    def extract_chemical_composition_data(self, file_path: str, compositions: list[str]) -> pd.DataFrame:
+        df = pd.read_csv(file_path)
 
-        # df.sort_values(by=['炉号', '类型'], ascending=[True, False], inplace=True)
-        # df.reset_index(drop=True, inplace=True)
-        df['Mn+Cr'] = round(df['Mn'].astype(float) + df['Cr'].astype(float), 5)
+        df_composition = df.reindex(columns=['炉号', '类型', *compositions])
+        df_composition['Mn+Cr'] = 0
+        df_composition = df_composition[df_composition['类型'].isin(SAMPLE_TYPES)]
+        df_composition = df_composition.replace('-', pd.NA).dropna(how='any')
 
-        return df
+        # df_composition.sort_values(by=['炉号', '类型'], ascending=[True, False], inplace=True)
+        # df_composition.reset_index(drop=True, inplace=True)
+        df_composition['Mn+Cr'] = round(df_composition['Mn'].astype(float) + df_composition['Cr'].astype(float), 5)
 
-    def extract_ageing_qrcode_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        df_filtered = df[[
+        return df_composition
+
+    def extract_ageing_qrcode_data(self, file_path: str) -> pd.DataFrame:
+        df = pd.read_csv(file_path)
+
+        df_ageing_qrcode = df[[
             '型号',
             '生产挤压批',
             '铝棒炉号',
@@ -152,13 +167,15 @@ class DataExtractor:
             '熔铸批号',
         ]]
 
-        # df_filtered.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
-        # df_filtered.reset_index(drop=True, inplace=True)
+        # df_ageing_qrcode.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
+        # df_ageing_qrcode.reset_index(drop=True, inplace=True)
 
-        return df_filtered
+        return df_ageing_qrcode
 
-    def extract_process_card_qrcode_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        df_filtered = df[[
+    def extract_process_card_qrcode_data(self, file_path) -> pd.DataFrame:
+        df = pd.read_csv(file_path)
+
+        df_process_card_qrcode = df[[
             '型号',
             '挤压批号',
             '炉号',
@@ -166,13 +183,12 @@ class DataExtractor:
             '二维码',
         ]]
 
-        df_filtered.rename(columns={'sfc': '时效批'}, inplace=True)
-        df_filtered['时效批'] = df_filtered['时效批'].apply(lambda x: x[:8])
+        df_process_card_qrcode.rename(columns={'sfc': '时效批'}, inplace=True)
+        df_process_card_qrcode['时效批'] = df_process_card_qrcode['时效批'].apply(lambda x: x[:8])
 
-        return df_filtered
+        return df_process_card_qrcode
     
     def extract_customer_shipment_details(self, df_shipment_batch: pd.DataFrame) -> pd.DataFrame:
-        print(df_shipment_batch['发货日期'])
         df_customer_shipment_details = df_shipment_batch.reindex(columns=[
             '客户料号',
             '品名',
@@ -198,3 +214,27 @@ class DataExtractor:
         df_customer_shipment_details['客户'] = df_customer_shipment_details['客户'].map(CUSTOMER_CODE_EN)
 
         return df_customer_shipment_details
+    
+    def extract_test_commission_form_data(self, file_path: str) -> pd.DataFrame:
+        df = pd.read_csv(file_path)
+
+        df_test_commission_form = df[[
+            '委托单号',
+            '检测项目',
+            '检验结果',
+            '型号',
+            '挤压批次',
+            '铝棒炉号',
+            '时效炉号',
+        ]]
+
+        # df_test_commission_form.sort_values(by=[
+        #     '型号',
+        #     '时效炉号',
+        #     '铝棒炉号',
+        #     '检测项目',
+        # ], inplace=True)
+
+        df_test_commission_form = df_test_commission_form.replace('-', None)
+
+        return df_test_commission_form

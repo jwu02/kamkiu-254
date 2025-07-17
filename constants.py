@@ -6,6 +6,17 @@ class CheckStatus(Enum):
     NG = '🔴 NG'
     NO_DATA = '🟠 找不到数据'
 
+class TestGroup(Enum):
+    VICKERS_HARDNESS = '维氏硬度'
+    ELECTRICAL_CONDUCTIVITY = '电导率'
+    ROOM_TEMPERATURE_TENSILE_TEST = '室温拉伸'
+    METALLOGRAPHIC_STRUCTURE = '铝合金金相显微组织'
+
+class SampleDeliveryTestResult(Enum):
+    CONFORMANT = 'Y-合格'
+    NON_CONFORMANT = 'N-不合格'
+    WAITING_FOR_RESULTS = ''
+
 customer_match = {
     '精密': '无锡精密',
     'EPZ': '无锡精密',

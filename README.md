@@ -19,7 +19,6 @@
 
 - take into account when opening a excel file, displays multiple CPK
 - color cells in same column, 1 colour for each value
-- name of manager to find
 
 ## Installation
 - python -m venv venv

@@ -18,40 +18,6 @@ def load_cpk_tolerance_map():
 
     return cpk_tolerance_map
 
-def check_cpk_conformance(cpk_path, df_cpk_tolerance) -> str:
-    """
-    Check CPk conformance given cpk_path and a df containing CPK tolerances
-
-    TODO: understand how CPk works, might not even be using the correct CPK tolerance
-    """
-    try:
-        # cpk_path = os.path.join(path, matching_files[0])
-
-        # wb = load_workbook(filename=cpk_path)
-        # sheet = wb.active
-        
-        # print(f"\nContents of {target_file}:")
-        # print("----------------------------------------")
-        # # for row in sheet.iter_rows(values_only=True):
-        # #     print(row)
-        # print("----------------------------------------")
-
-        # # ================ get data from existing CPK files
-        # df = pd.read_excel(
-        #     cpk_path,
-        #     engine='openpyxl',
-        #     header=None,  # No headers (since we're reading raw cells)
-        #     usecols="AH:AT",  # Columns from AH to AT
-        #     skiprows=10,  # Skip first 10 rows (to start at row 11)
-        #     nrows=56,  # Read 66 rows (11 to 76 → 76-10=66)
-        # )
-        
-        return "🟢 存在"
-
-    except Exception as e:
-        print(f"Error reading Excel file: {e}")
-        return "🔴 错误"
-
 def find_files_with_substrings(directory: str, substrings: list[str]) -> list[str]:
     """
     Return list of filenames in directory that contain substring

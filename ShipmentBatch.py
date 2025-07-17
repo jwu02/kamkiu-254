@@ -24,6 +24,7 @@ from constants import (
     PART_NAME,
     SCHEMA_CODE,
     CUSTOMER_PART_CODE,
+    TestGroup,
 )
 
 class ShipmentBatch:
@@ -242,31 +243,28 @@ class ShipmentBatch:
                             df_result.at[row_key, sample_code] = value
                         else:
                             # BRUTE FORCE APPROACH: Manually add alternative points
-                            if test_group=='维氏硬度' and point=='C2':
-                                print(f"{test_group} {point}")
+                            if test_group==TestGroup.VICKERS_HARDNESS.value and point=='C2':
                                 alternative_condition &= (df_functional_properties['点位'] == 'S1')
                                 matched = df_functional_properties[alternative_condition]
                                 if not matched.empty:
                                     value = matched.iloc[0].get(test_detail)
                                     df_result.at[row_key, sample_code] = value
                             
-                            if test_group=='铝合金金相显微组织' and point=='S7':
-                                print(f"{test_group} {point}")
+                            if test_group==TestGroup.METALLOGRAPHIC_STRUCTURE.value and point=='S7':
                                 alternative_condition &= (df_functional_properties['点位'] == 'S10')
                                 matched = df_functional_properties[alternative_condition]
                                 if not matched.empty:
                                     value = matched.iloc[0].get(test_detail)
                                     df_result.at[row_key, sample_code] = value
                             
-                            if test_group=='铝合金金相显微组织' and point=='S8':
-                                print(f"{test_group} {point}")
+                            if test_group==TestGroup.METALLOGRAPHIC_STRUCTURE.value and point=='S8':
                                 alternative_condition &= (df_functional_properties['点位'] == 'S13')
                                 matched = df_functional_properties[alternative_condition]
                                 if not matched.empty:
                                     value = matched.iloc[0].get(test_detail)
                                     df_result.at[row_key, sample_code] = value
                             
-                            if test_group=='铝合金金相显微组织' and point=='S9':
+                            if test_group==TestGroup.METALLOGRAPHIC_STRUCTURE.value and point=='S9':
                                 alternative_condition &= (df_functional_properties['点位'] == 'S16')
                                 matched = df_functional_properties[alternative_condition]
                                 if not matched.empty:

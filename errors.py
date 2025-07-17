@@ -11,3 +11,9 @@ class ReportExistsError(FileExistsError):
     """
     def __init__(self, message):
         super().__init__(message)
+
+class NonConformantError(Exception):
+    """Raised when functional performance does not meet required standards."""
+    def __init__(self, message="Non-conformant to required specifications"):
+        self.message = message
+        super().__init__(self.message)
