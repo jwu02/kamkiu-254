@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, QHBoxLayout, QVBoxLayout,
     QFileDialog, QTableWidgetItem, QLabel, QMessageBox
 )
-import json
 
 from MultiSelectionTable import MultiSelectionTable
 
@@ -258,8 +257,8 @@ class KamKiu254(QMainWindow):
 
         try:
             output_report_path = sb.generate_report(
-                self.df_shipment_batch, 
-                self.df_chemical_composition, 
+                self.df_shipment_batch,
+                self.df_chemical_composition,
                 self.df_chemical_composition_limits,
                 self.df_mechanical_properties,
                 self.mid_plate_report_functional_requirements,
@@ -304,12 +303,8 @@ class KamKiu254(QMainWindow):
             show_error(f"读取文件出错: {str(e)}")
 
     def check_cpk_path(self):
-        try:
-            self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
-        except Exception as e:
-            print(e)
-        
         self.df_shipment_batch = self.data_checker.check_cpk_path(self.df_shipment_batch)
+
         self.display_dataframe(self.df_shipment_batch)
         self.display_report_generation_buttons()
     
