@@ -127,7 +127,7 @@ class DataChecker:
     
     def check_functional_conformance(self, shipment_batch: ShipmentBatch, df_test_commission_form: pd.DataFrame) -> str:
         """
-        Check mechanical function conformance of every shipment batch entry using sample test results data exported from wtd1 
+        Check mechanical function conformance of a shipment batch entry using sample test results data exported from wtd1 
         """
         for tg in TestGroup:
             condition = (

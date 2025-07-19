@@ -5,10 +5,12 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, QHBoxLayout, QVBoxLayout,
     QFileDialog, QTableWidgetItem, QLabel, QMessageBox
 )
+import json
 
 from MultiSelectionTable import MultiSelectionTable
 
 from ShipmentBatch import ShipmentBatch
+from DataRequester import DataRequester
 from DataExtractor import DataExtractor
 from DataChecker import DataChecker
 
@@ -26,25 +28,19 @@ pd.options.mode.copy_on_write = True
 
 class KamKiu254(QMainWindow):
     DOCUMENT_NOT_UPLOADED = ""
-    UPLOAD_CSV = "上传 CSV"
 
     def __init__(self):
         super().__init__()
 
+        self.data_requester = DataRequester()
         self.data_extractor = DataExtractor()
         self.data_checker = DataChecker()
 
         self.df_shipment_batch = None
         self.df_chemical_composition = None
-        self.df_ageing_qrcode = None
-        self.df_process_card_qrcode = None
-
-        self.df_functional_properties = None
-        self.df_function_ageing = None
-        self.df_function_casting = None
+        self.df_mechanical_properties = None
 
         self.setDesiredElements()
-        self.setDesiredSampleTypes()
 
         self.mid_plate_report_functional_requirements = None
         self.u_part_report_functional_requirements = None
@@ -68,70 +64,40 @@ class KamKiu254(QMainWindow):
         self.shipment_batch_layout.addWidget(QLabel("发货批次表："))
         self.shipment_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
         self.shipment_batch_layout.addWidget(self.shipment_path_label)
-        self.shipment_upload_button = QPushButton(self.UPLOAD_CSV)
-        self.shipment_upload_button.clicked.connect(self.upload_shipment_batch_csv)
+        self.shipment_upload_button = QPushButton("读取 发货批次表")
+        self.shipment_upload_button.clicked.connect(self.display_shipment_batch_data_full)
         self.shipment_batch_layout.addWidget(self.shipment_upload_button)
         self.shipment_batch_layout.addStretch()
 
         # 上传 wtdmx 数据 
-        self.functional_properties_ageing_filter_layout = QHBoxLayout()
-        self.functional_properties_ageing_filter_layout.addWidget(QLabel("性能 - 硬度、电导率、拉伸（按时效批号搜索）："))
-        self.function_ageing_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        self.functional_properties_ageing_filter_layout.addWidget(self.function_ageing_path_label)
-        self.function_ageing_filter_button = QPushButton(self.UPLOAD_CSV)
-        self.function_ageing_filter_button.clicked.connect(self.upload_functional_properties_ageing_filter_xlsx)
-        self.functional_properties_ageing_filter_layout.addWidget(self.function_ageing_filter_button)
-        self.functional_properties_ageing_filter_layout.addStretch()
-
-        # 上传 wtdmx 数据
-        self.functional_properties_furnace_filter_layout = QHBoxLayout()
-        self.functional_properties_furnace_filter_layout.addWidget(QLabel("性能 - 金相（按熔铸炉号搜索）："))
-        self.function_furnace_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        self.functional_properties_furnace_filter_layout.addWidget(self.function_furnace_path_label)
-        self.function_furance_upload_button = QPushButton(self.UPLOAD_CSV)
-        self.function_furance_upload_button.clicked.connect(self.upload_functional_properties_furnace_filter_xlsx)
-        self.functional_properties_furnace_filter_layout.addWidget(self.function_furance_upload_button)
-        self.functional_properties_furnace_filter_layout.addStretch()
+        self.mechanical_properties_layout = QHBoxLayout()
+        self.mechanical_properties_layout.addWidget(QLabel("性能："))
+        self.mechanical_properties_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
+        self.mechanical_properties_layout.addWidget(self.mechanical_properties_path_label)
+        self.mechanical_properties_upload_button = QPushButton("读取 机械性能")
+        self.mechanical_properties_upload_button.clicked.connect(self.request_mechanical_properties_data)
+        self.mechanical_properties_layout.addWidget(self.mechanical_properties_upload_button)
+        self.mechanical_properties_layout.addStretch()
 
         # 上传 化学成分
         self.composition_layout = QHBoxLayout()
         self.composition_layout.addWidget(QLabel("化学成分："))
         self.composition_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
         self.composition_layout.addWidget(self.composition_path_label)
-        self.composition_upload_button = QPushButton(self.UPLOAD_CSV)
-        self.composition_upload_button.clicked.connect(self.upload_chemical_composition_csv)
+        self.composition_upload_button = QPushButton("读取 化学成分")
+        self.composition_upload_button.clicked.connect(self.request_chemical_composition_data)
         self.composition_layout.addWidget(self.composition_upload_button)
         self.composition_layout.addStretch()
 
-        # 上传 型材时效二维码
-        self.ageing_qrcode_layout = QHBoxLayout()
-        self.ageing_qrcode_layout.addWidget(QLabel("型材时效二维码："))
-        self.ageing_qrcode_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        self.ageing_qrcode_layout.addWidget(self.ageing_qrcode_path_label)
-        self.ageing_qrcode_upload_button = QPushButton(self.UPLOAD_CSV)
-        self.ageing_qrcode_upload_button.clicked.connect(self.upload_ageing_qrcode_csv)
-        self.ageing_qrcode_layout.addWidget(self.ageing_qrcode_upload_button)
-        self.ageing_qrcode_layout.addStretch()
-
-        # 上传 流程卡二维码记录
-        self.process_card_qrcode_layout = QHBoxLayout()
-        self.process_card_qrcode_layout.addWidget(QLabel("流程卡二维码记录："))
-        self.process_card_qrcode_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        self.process_card_qrcode_layout.addWidget(self.process_card_qrcode_path_label)
-        self.process_card_qrcode_upload_button = QPushButton(self.UPLOAD_CSV)
-        self.process_card_qrcode_upload_button.clicked.connect(self.upload_process_card_qrcode_csv)
-        self.process_card_qrcode_layout.addWidget(self.process_card_qrcode_upload_button)
-        self.process_card_qrcode_layout.addStretch()
-
-        # 上传 检测委托单 wtd1
-        self.test_commission_form_layout = QHBoxLayout()
-        self.test_commission_form_layout.addWidget(QLabel("检测委托单（wtd1）："))
-        self.test_commission_form_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        self.test_commission_form_layout.addWidget(self.test_commission_form_path_label)
-        self.test_commission_form_upload_button = QPushButton(self.UPLOAD_CSV)
-        self.test_commission_form_upload_button.clicked.connect(self.upload_test_commission_form_csv)
-        self.test_commission_form_layout.addWidget(self.test_commission_form_upload_button)
-        self.test_commission_form_layout.addStretch()
+        # # 上传 检测委托单 wtd1
+        # self.test_commission_form_layout = QHBoxLayout()
+        # self.test_commission_form_layout.addWidget(QLabel("检测委托单（wtd1）："))
+        # self.test_commission_form_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
+        # self.test_commission_form_layout.addWidget(self.test_commission_form_path_label)
+        # self.test_commission_form_upload_button = QPushButton(self.UPLOAD_CSV)
+        # self.test_commission_form_upload_button.clicked.connect(self.request_test_commission_form_data)
+        # self.test_commission_form_layout.addWidget(self.test_commission_form_upload_button)
+        # self.test_commission_form_layout.addStretch()
         
         # 其他功能
         self.other_functionalities_layout = QHBoxLayout()
@@ -143,14 +109,6 @@ class KamKiu254(QMainWindow):
         self.check_chemical_compositions_button = QPushButton("检查化学成分")
         self.check_chemical_compositions_button.clicked.connect(self.check_chemical_composition_conformance)
         self.other_functionalities_layout.addWidget(self.check_chemical_compositions_button)
-        # 采取 挤压批此（二维码） & 熔铸批号
-        self.fill_extrusion_batch_button = QPushButton("采取 挤压批此（二维码） & 熔铸批号")
-        self.fill_extrusion_batch_button.clicked.connect(self.extract_data_from_ageing_qrcode)
-        self.other_functionalities_layout.addWidget(self.fill_extrusion_batch_button)
-        # 采取 时效批次（二维码）
-        self.fill_ageing_batch_button = QPushButton("采取 时效批次（二维码）")
-        self.fill_ageing_batch_button.clicked.connect(self.extract_ageing_batch_qrcode)
-        self.other_functionalities_layout.addWidget(self.fill_ageing_batch_button)
 
         # 对下报告数量
         self.check_batch_quantity_button = QPushButton("对数量")
@@ -169,12 +127,9 @@ class KamKiu254(QMainWindow):
 
         layout = QVBoxLayout()
         layout.addLayout(self.shipment_batch_layout)
-        layout.addLayout(self.functional_properties_ageing_filter_layout)
-        layout.addLayout(self.functional_properties_furnace_filter_layout)
+        layout.addLayout(self.mechanical_properties_layout)
         layout.addLayout(self.composition_layout)
-        layout.addLayout(self.ageing_qrcode_layout)
-        layout.addLayout(self.process_card_qrcode_layout)
-        layout.addLayout(self.test_commission_form_layout)
+        # layout.addLayout(self.test_commission_form_layout)
         layout.addLayout(self.other_functionalities_layout)
         layout.addWidget(self.main_table)
 
@@ -183,23 +138,34 @@ class KamKiu254(QMainWindow):
         main_widget.setLayout(layout)
         self.setCentralWidget(main_widget)
 
+    def display_shipment_batch_data_full(self):
+        self.request_shipment_batch_data()
 
-    def upload_shipment_batch_csv(self):
-        """
-        上传 发货批次表
-        """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "上传 发货批次表 CSV", "", "CSV Files (*.csv)"
-        )
+        model_code_list = self.df_shipment_batch['型号'].tolist()
+        extrusion_batch_code_list = self.df_shipment_batch['挤压批号'].tolist()
 
-        if file_path:
-            self.shipment_path_label.setText(f"{file_path}")
-            try:
-                self.df_shipment_batch = self.data_extractor.extract_shipment_batch_data(file_path)
-                self.display_dataframe(self.df_shipment_batch)
-                self.display_report_generation_buttons()
-            except Exception as e:
-                self.shipment_path_label.setText(f"读取文件出错: {str(e)}")
+        response_data = self.data_requester.request_ageing_qrcode(model_code_list, extrusion_batch_code_list)
+        df_ageing_qrcode = self.data_extractor.extract_ageing_qrcode_data(response_data)
+        self.df_shipment_batch = self.data_extractor.fill_data_from_ageing_qrcode(self.df_shipment_batch, df_ageing_qrcode)
+
+        response_data = self.data_requester.request_process_card_qrcode(model_code_list, extrusion_batch_code_list)
+        df_process_card_qrcode = self.data_extractor.extract_process_card_qrcode_data(response_data)
+        self.df_shipment_batch = self.data_extractor.fill_data_from_process_card_qrcode(self.df_shipment_batch, df_process_card_qrcode)
+
+        self.display_dataframe(self.df_shipment_batch)
+        self.display_report_generation_buttons()
+
+    def request_shipment_batch_data(self):
+        """
+        读取 发货批次表 数据
+        """
+        try:
+            response_data = self.data_requester.request_shipment_details()
+            self.df_shipment_batch = self.data_extractor.extract_shipment_batch_data(response_data)
+
+            # self.display_dataframe(self.df_shipment_batch)
+        except Exception as e:
+            self.shipment_path_label.setText(f"读取数据错误: {str(e)}")
 
     def display_dataframe(self, df: pd.DataFrame):
         """
@@ -216,39 +182,31 @@ class KamKiu254(QMainWindow):
         
         self.main_table.resizeColumnsToContents()
     
-    def upload_functional_properties_ageing_filter_xlsx(self):
+    def request_mechanical_properties_data(self):
         """
-        上传 性能数据
+        读取 机械性能 数据
         """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "上传 性能 XLSX", "", "Excel Files (*.xlsx)"
-        )
+        try:
+            model_code_list = self.df_shipment_batch['型号'].tolist()
+            ageing_furnace_code_list = self.df_shipment_batch['时效批号'].tolist()
+            smelting_furnace_code_list = self.df_shipment_batch['炉号'].tolist()
 
-        if file_path:
-            self.function_ageing_path_label.setText(f"{file_path}")
-            try:
-                self.df_function_ageing = self.data_extractor.extract_functional_properties_data(file_path)
-                if self.df_function_casting is not None:
-                    self.df_functional_properties = pd.concat([self.df_function_ageing, self.df_function_casting], axis=0)
-            except Exception as e:
-                self.function_ageing_path_label.setText(f"读取文件出错: {str(e)}")
-    
-    def upload_functional_properties_furnace_filter_xlsx(self):
-        """
-        上传 性能数据
-        """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "上传 性能 XLSX", "", "Excel Files (*.xlsx)"
-        )
+            response_data = self.data_requester.request_mechanical_properties(
+                model_code_list=model_code_list, 
+                ageing_furnace_code_list=ageing_furnace_code_list
+            )
+            df_mechanical_properties_ageing = self.data_extractor.extract_mechanical_properties_data(response_data)
 
-        if file_path:
-            self.function_furnace_path_label.setText(f"{file_path}")
-            try:
-                self.df_function_casting = self.data_extractor.extract_functional_properties_data(file_path)
-                if self.df_function_ageing is not None:
-                    self.df_functional_properties = pd.concat([self.df_function_ageing, self.df_function_casting], axis=0)
-            except Exception as e:
-                self.function_furnace_path_label.setText(f"读取文件出错: {str(e)}")
+            response_data = self.data_requester.request_mechanical_properties(
+                model_code_list=model_code_list, 
+                smelting_furnace_code_list=smelting_furnace_code_list
+            )
+            df_mechanical_properties_smelting = self.data_extractor.extract_mechanical_properties_data(response_data)
+
+            self.df_mechanical_properties = pd.concat([df_mechanical_properties_ageing, df_mechanical_properties_smelting], axis=0)
+
+        except Exception as e:
+            self.mechanical_properties_path_label.setText(f"读取文件出错: {str(e)}")
     
     def display_report_generation_buttons(self):
         num_table_cols = self.main_table.columnCount()
@@ -263,14 +221,6 @@ class KamKiu254(QMainWindow):
             self.main_table.setCellWidget(index, num_table_cols, button)
     
     def generate_all_reports(self):
-        try:
-            self.check_data_uploaded(self.df_shipment_batch, "请上传发货批次表数据")
-            self.check_data_uploaded(self.df_function_ageing, "请上传经过时效批号搜索的性能数据")
-            self.check_data_uploaded(self.df_function_casting, "请上传经过熔铸炉号搜索的性能数据")
-            self.check_data_uploaded(self.df_chemical_composition, "请上传经化学成分数据")
-        except Exception as e:
-            return
-        
         for index, row in self.df_shipment_batch.iterrows():
             sb = ShipmentBatch(row)
 
@@ -281,12 +231,12 @@ class KamKiu254(QMainWindow):
                     self.df_shipment_batch,
                     self.df_chemical_composition, 
                     self.df_chemical_composition_limits,
-                    self.df_functional_properties,
+                    self.df_mechanical_properties,
                     self.mid_plate_report_functional_requirements,
                     self.u_part_report_functional_requirements
                 )
 
-                show_info("Report generated at :")
+                # show_info("Report generated at :")
             # except NonConformantError as e:
             #     self.df_shipment_batch.at[index, '性能'] = e.message
             #     print(e)
@@ -298,17 +248,11 @@ class KamKiu254(QMainWindow):
         show_info("生成完毕")
         
     def safe_generate_report(self, index, row):
-        try:
-            self.check_data_uploaded(self.df_function_ageing, "请上传经过时效批号搜索的性能数据")
-            self.check_data_uploaded(self.df_function_casting, "请上传经过熔铸炉号搜索的性能数据")
-            self.check_data_uploaded(self.df_chemical_composition, "请上传经化学成分数据")
-        except Exception as e:
-            print(e)
-        
         sb = ShipmentBatch(row)
         output_report_path = None
 
         self.df_shipment_batch.at[index, '性能'] = self.data_checker.check_functional_conformance(sb, self.df_test_commission_form)
+        
         self.display_dataframe(self.df_shipment_batch)
         self.display_report_generation_buttons()
 
@@ -317,7 +261,7 @@ class KamKiu254(QMainWindow):
                 self.df_shipment_batch, 
                 self.df_chemical_composition, 
                 self.df_chemical_composition_limits,
-                self.df_functional_properties,
+                self.df_mechanical_properties,
                 self.mid_plate_report_functional_requirements,
                 self.u_part_report_functional_requirements
             )
@@ -335,22 +279,19 @@ class KamKiu254(QMainWindow):
         except Exception as e:
             show_error(f"读取性能要求与点位数据出错: {str(e)}")
 
-    def upload_chemical_composition_csv(self):
+    def request_chemical_composition_data(self):
         """
-        上传 化学成分
+        读取 化学成分 数据
         """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "上传 化学成分 CSV", "", "CSV Files (*.csv)"
-        )
+        try:
+            compositions = self.df_chemical_composition_limits['成分'].tolist()
+            smelt_lot_list = self.df_shipment_batch['炉号'].tolist()
+            response_data = self.data_requester.request_chemical_composition(smelt_lot_list)
+            self.df_chemical_composition = self.data_extractor.extract_chemical_composition_data(response_data, compositions)
 
-        if file_path:
-            self.composition_path_label.setText(f"{file_path}")
-            try:
-                compositions = self.df_chemical_composition_limits['成分'].tolist()
-                self.df_chemical_composition = self.data_extractor.extract_chemical_composition_data(file_path, compositions)
-                # self.display_dataframe(self.df_chemical_composition)
-            except Exception as e:
-                self.composition_path_label.setText(f"读取文件出错: {str(e)}")
+            self.display_dataframe(self.df_chemical_composition)
+        except Exception as e:
+            self.composition_path_label.setText(f"读取文件出错: {str(e)}")
     
     def setDesiredElements(self):
         try:
@@ -361,65 +302,6 @@ class KamKiu254(QMainWindow):
             })
         except Exception as e:
             show_error(f"读取文件出错: {str(e)}")
-    
-    def setDesiredSampleTypes(self):
-        try:
-            self.desired_sample_types = pd.read_csv("./data/成分_类型条件.csv")
-        except Exception as e:
-            show_error(f"读取文件出错: {str(e)}")
-
-    def upload_ageing_qrcode_csv(self):
-        """
-        上传 型材时效二维码
-        """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "上传 型材时效二维码 CSV", "", "CSV Files (*.csv)"
-        )
-
-        if file_path:
-            self.ageing_qrcode_path_label.setText(f"{file_path}")
-            try:
-                self.df_ageing_qrcode = self.data_extractor.extract_ageing_qrcode_data(file_path)
-                # self.display_dataframe(self.df_ageing_qrcode)
-            except Exception as e:
-                self.ageing_qrcode_path_label.setText(f"读取文件出错: {str(e)}")
-    
-    def upload_process_card_qrcode_csv(self):
-        """
-        上传 流程卡二维码记录
-        """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "上传 流程卡二维码记录 CSV", "", "CSV Files (*.csv)"
-        )
-
-        if file_path:
-            self.process_card_qrcode_path_label.setText(f"{file_path}")
-            try:
-                self.df_process_card_qrcode = self.data_extractor.extract_process_card_qrcode_data(file_path)
-                # self.display_dataframe(self.df_process_card_qrcode)
-            except Exception as e:
-                self.process_card_qrcode_path_label.setText(f"读取文件出错: {str(e)}")
-    
-    def upload_test_commission_form_csv(self):
-        """
-        上传 检测委托单wtd1
-        """
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "上传 检测委托单 CSV", "", "CSV Files (*.csv)"
-        )
-
-        if file_path:
-            self.test_commission_form_path_label.setText(f"{file_path}")
-            try:
-                self.df_test_commission_form = self.data_extractor.extract_test_commission_form_data(file_path)
-                # self.display_dataframe(self.df_test_commission_form)
-            except Exception as e:
-                self.test_commission_form_path_label.setText(f"读取文件出错: {str(e)}")
-    
-    def check_data_uploaded(self, var_to_check, message: str):
-        if var_to_check is None:
-            show_error(message)
-            raise ValueError(message)
 
     def check_cpk_path(self):
         try:
@@ -435,75 +317,16 @@ class KamKiu254(QMainWindow):
         """
         检查 化学成分
         """
-        try:
-            self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
-            self.check_data_uploaded(self.df_chemical_composition, "请上传 化学成分 数据")
-        except Exception as e:
-            print(e)
+        if self.df_shipment_batch is None:
+            self.display_shipment_batch_data_full()
+        if self.df_chemical_composition is None:
+            self.request_chemical_composition_data()
         
         self.df_shipment_batch = self.data_checker.check_chemical_composition_conformance(
             self.df_shipment_batch,
             self.df_chemical_composition,
             self.df_chemical_composition_limits
         )
-        
-        self.display_dataframe(self.df_shipment_batch)
-        self.display_report_generation_buttons()
-
-
-    def extract_data_from_ageing_qrcode(self):
-        """
-        填入 挤压批 & 熔铸批号 二维码
-        """
-        try:
-            self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
-            self.check_data_uploaded(self.df_ageing_qrcode, "请上传 型材时效二维码 数据")
-        except Exception as e:
-            print(e)
-
-        for index, row in self.df_shipment_batch.iterrows():
-            model_code = row['型号']
-            extrusion_batch_code = row['挤压批号']
-            furnace_code = row['炉号']
-
-            df = self.df_ageing_qrcode[
-                (self.df_ageing_qrcode['型号'] == model_code)
-                & (self.df_ageing_qrcode['生产挤压批'] == extrusion_batch_code)
-                & (self.df_ageing_qrcode['铝棒炉号'] == furnace_code)
-            ]
-            
-            self.df_shipment_batch.at[index, '挤压批（二维码）'] = df.iloc[0]['挤压批'] if len(df)>0 else "🟠 没记录"
-            self.df_shipment_batch.at[index, '熔铸批号'] = df.iloc[0]['熔铸批号'][2:] if len(df)>0 else "🟠 没记录"
-
-        self.df_shipment_batch['挤压批次二维码'] = self.df_shipment_batch['挤压批（二维码）'].apply(lambda x: str(x).split('+')[-1])
-        
-        self.display_dataframe(self.df_shipment_batch)
-        self.display_report_generation_buttons()
-    
-    def extract_ageing_batch_qrcode(self):
-        """
-        从 流程卡二维码记录 采取 时效批次二维码
-        """
-        try:
-            self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
-            self.check_data_uploaded(self.df_process_card_qrcode, "请上传 流程卡二维码记录 数据")
-        except Exception as e:
-            print(e)
-            
-        for index, row in self.df_shipment_batch.iterrows():
-            model_code = row['型号']
-            extrusion_batch_code = row['挤压批号']
-            furnace_code = row['炉号']
-            ageing_code = row['时效批号']
-
-            df = self.df_process_card_qrcode[
-                (self.df_process_card_qrcode['型号'] == model_code)
-                & (self.df_process_card_qrcode['挤压批号'] == extrusion_batch_code)
-                & (self.df_process_card_qrcode['炉号'] == furnace_code)
-                & (self.df_process_card_qrcode['时效批'] == ageing_code)
-            ]
-
-            self.df_shipment_batch.at[index, '时效批次（二维码）'] = df.iloc[0]['二维码'][-4:] if len(df)>0 else "🟠 没记录"
         
         self.display_dataframe(self.df_shipment_batch)
         self.display_report_generation_buttons()
@@ -540,9 +363,6 @@ class KamKiu254(QMainWindow):
 
     def generate_customer_shipment_details(self):
         try:
-            self.check_data_uploaded(self.df_shipment_batch, "请上传 发货批次表 数据")
-            self.check_data_uploaded(self.df_process_card_qrcode, "请上传 流程卡二维码记录 数据")
-
             self.df_customer_shipment_details = self.data_extractor.extract_customer_shipment_details(self.df_shipment_batch)
             self.display_dataframe(self.df_customer_shipment_details)
         except Exception as e:

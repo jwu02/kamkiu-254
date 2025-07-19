@@ -17,35 +17,43 @@ from constants import (
 )
 
 class DataExtractor:
-    def extract_shipment_batch_data(self, file_path: str) -> pd.DataFrame:
-        df = pd.read_csv(file_path)
+    def extract_shipment_batch_data(self, response_data: list) -> pd.DataFrame:
+        title_list = [list(title_obj.keys())[0] for title_obj in response_data['titleList']]
+        data = response_data['list']
+        df = pd.DataFrame(data, columns=title_list)
 
         df_shipment_batch = df.reindex(columns=[
             '地区',
             '项目',
-            '发货数',
-            '发货日期',
-            '型号',
+            'zfhs', # 发货数
+            'zfhrq', # 发货日期
+            'zbm', # 型号
             '图号',
             '合金',
             '回收比',
-            '挤压批号', # 第二列 挤压批号（有两列）
+            'jy_no2', # 第二列 挤压批号（有两列）
             '挤压批（二维码）',
             '挤压批次二维码',
             '模号',
-            '炉号',
+            'smelt_lot', #炉号
             '熔铸批号',
-            '时效批号',
+            'sx_no', # 时效批号
             '时效炉',
             '时效批次（二维码）',
             '客户料号',
             '客户批号',
             '客户',
         ])
+
+        # Create a mapping dictionary
+        column_mapping = self.get_column_name_mapping(response_data['titleList'])
+
+        # Rename the columns
+        df_shipment_batch = df_shipment_batch.rename(columns=column_mapping)
         
         # Apply to DataFrame
-        df_shipment_batch['地区'] = df['客户/地区'].apply(self.extract_location)
-        df_shipment_batch['客户'] = df['客户/地区'].apply(self.extract_customer)
+        df_shipment_batch['地区'] = df['zkhdq'].apply(self.extract_location) # 客户/地区
+        df_shipment_batch['客户'] = df['zkhdq'].apply(self.extract_customer)
         df_shipment_batch['项目'] = 'Manchester'
         df_shipment_batch['图号'] = df_shipment_batch['型号'].apply(lambda model_code: SCHEMA_CODE[model_code])
         df_shipment_batch['合金'] = '7R03'
@@ -55,7 +63,6 @@ class DataExtractor:
         df_shipment_batch['时效炉'] = df_shipment_batch['时效批号'].apply(lambda model_code: model_code[3:5])
         df_shipment_batch['客户料号'] = df_shipment_batch['型号'].apply(lambda model_code: CUSTOMER_PART_CODE[model_code])
         df_shipment_batch['客户批号'] = ''
-        df_shipment_batch['时效批号（sfc）'] = df_shipment_batch['时效批号'].apply(lambda x: x+'*')
 
         df_shipment_batch['型号'] = pd.Categorical(
             df_shipment_batch['型号'], 
@@ -71,6 +78,15 @@ class DataExtractor:
 
         return df_shipment_batch
     
+    def get_column_name_mapping(self, unflattened: list) -> dict:
+        # Create a mapping dictionary
+        column_mapping = {}
+        for item in unflattened:
+            column_mapping.update(item)
+
+        print(column_mapping)
+        return column_mapping
+
     def extract_location(self, name: str) -> str:
         matched_location = [v for k, v in location_match.items() if k in name]
         location = sorted(set(matched_location))
@@ -105,8 +121,101 @@ class DataExtractor:
         
         return die_code
 
-    def extract_functional_properties_data(self, file_path: str) -> pd.DataFrame:
-        df = pd.read_excel(file_path)
+    def extract_ageing_qrcode_data(self, response_data: dict) -> pd.DataFrame:
+        df = pd.DataFrame(response_data['list'])
+
+        # Rename the columns we need
+        # Manually create column name mapping, column heading codes doesnt match with obj keys
+        df = df.rename(columns={
+            'zbm': '型号',
+            'jyPrd': '生产挤压批',
+            'smeltLot': '铝棒炉号',
+            'jyCode': '挤压批',
+            'rzCode': '熔铸批号',
+        })
+
+        df_ageing_qrcode = df[[
+            '型号',
+            '生产挤压批',
+            '铝棒炉号',
+            '挤压批',
+            '熔铸批号',
+        ]]
+
+        # df_ageing_qrcode.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
+        # df_ageing_qrcode.reset_index(drop=True, inplace=True)
+
+        return df_ageing_qrcode
+
+    def extract_process_card_qrcode_data(self, response_data: dict) -> pd.DataFrame:
+        df = pd.DataFrame(response_data['list'])
+
+        df = df.rename(columns={
+            'zbm': '型号',
+            'jyNo': '挤压批号',
+            'zlh': '炉号',
+            'sfc': '时效批',
+            'qrcode': '二维码',
+        })
+
+        df_process_card_qrcode = df[[
+            '型号',
+            '挤压批号',
+            '炉号',
+            '时效批',
+            '二维码',
+        ]]
+        df_process_card_qrcode['时效批'] = df_process_card_qrcode['时效批'].apply(lambda x: x[:8])
+
+        return df_process_card_qrcode
+
+    def fill_data_from_ageing_qrcode(self, df_shipment_batch: pd.DataFrame, df_ageing_qrcode: pd.DataFrame) -> pd.DataFrame:
+        """
+        填入 挤压批 & 熔铸批号 二维码
+        """
+        for index, row in df_shipment_batch.iterrows():
+            model_code = row['型号']
+            extrusion_batch_code = row['挤压批号']
+            furnace_code = row['炉号']
+
+            df = df_ageing_qrcode[
+                (df_ageing_qrcode['型号'] == model_code) &
+                (df_ageing_qrcode['生产挤压批'] == extrusion_batch_code) &
+                (df_ageing_qrcode['铝棒炉号'] == furnace_code)
+            ]
+            
+            df_shipment_batch.at[index, '挤压批（二维码）'] = df.iloc[0]['挤压批'] if len(df)>0 else "🟠 没记录"
+            df_shipment_batch.at[index, '熔铸批号'] = df.iloc[0]['熔铸批号'][2:] if len(df)>0 else "🟠 没记录"
+
+        df_shipment_batch['挤压批次二维码'] = df_shipment_batch['挤压批（二维码）'].apply(lambda x: str(x).split('+')[-1])
+
+        return df_shipment_batch
+
+    def fill_data_from_process_card_qrcode(self, df_shipment_batch: pd.DataFrame, df_process_card_qrcode: pd.DataFrame) -> pd.DataFrame:
+        """
+        从 流程卡二维码记录 采取 时效批次二维码
+        """
+        for index, row in df_shipment_batch.iterrows():
+            model_code = row['型号']
+            extrusion_batch_code = row['挤压批号']
+            furnace_code = row['炉号']
+            ageing_code = row['时效批号']
+
+            df = df_process_card_qrcode[
+                (df_process_card_qrcode['型号'] == model_code) &
+                (df_process_card_qrcode['挤压批号'] == extrusion_batch_code) &
+                (df_process_card_qrcode['炉号'] == furnace_code) &
+                (df_process_card_qrcode['时效批'] == ageing_code)
+            ]
+
+            df_shipment_batch.at[index, '时效批次（二维码）'] = df.iloc[0]['二维码'][-4:] if len(df)>0 else "🟠 没记录"
+        
+        return df_shipment_batch
+
+    def extract_mechanical_properties_data(self, response_data: dict) -> pd.DataFrame:
+        df = pd.DataFrame(response_data['list'])
+
+        # TODO: Create dataframe column title remapping/rename
 
         df_functional_properties = df[[
             '检测项目',
@@ -141,8 +250,16 @@ class DataExtractor:
 
         return df_functional_properties
     
-    def extract_chemical_composition_data(self, file_path: str, compositions: list[str]) -> pd.DataFrame:
-        df = pd.read_csv(file_path)
+    def extract_chemical_composition_data(self, response_data: dict, compositions: list[str]) -> pd.DataFrame:
+        columns = self.get_column_name_mapping(response_data['titleList'])
+        df = pd.DataFrame(response_data['list'])
+        df = df.rename(columns={
+            'process_lot': '炉号',
+            'type': '类型'
+        })
+        df = df.rename(columns=columns)
+        print(f"Removing duplicated columns from chemical composition DataFrame: {df.columns[df.columns.duplicated()].tolist()}")
+        df = df.loc[:, ~df.columns.duplicated()]
 
         df_composition = df.reindex(columns=['炉号', '类型', *compositions])
         df_composition['Mn+Cr'] = 0
@@ -154,39 +271,6 @@ class DataExtractor:
         df_composition['Mn+Cr'] = round(df_composition['Mn'].astype(float) + df_composition['Cr'].astype(float), 5)
 
         return df_composition
-
-    def extract_ageing_qrcode_data(self, file_path: str) -> pd.DataFrame:
-        df = pd.read_csv(file_path)
-
-        df_ageing_qrcode = df[[
-            '型号',
-            '生产挤压批',
-            '铝棒炉号',
-            '内部时效批',
-            '挤压批',
-            '熔铸批号',
-        ]]
-
-        # df_ageing_qrcode.sort_values(by=['型号', '铝棒炉号', '生产挤压批'], inplace=True)
-        # df_ageing_qrcode.reset_index(drop=True, inplace=True)
-
-        return df_ageing_qrcode
-
-    def extract_process_card_qrcode_data(self, file_path) -> pd.DataFrame:
-        df = pd.read_csv(file_path)
-
-        df_process_card_qrcode = df[[
-            '型号',
-            '挤压批号',
-            '炉号',
-            'sfc',
-            '二维码',
-        ]]
-
-        df_process_card_qrcode.rename(columns={'sfc': '时效批'}, inplace=True)
-        df_process_card_qrcode['时效批'] = df_process_card_qrcode['时效批'].apply(lambda x: x[:8])
-
-        return df_process_card_qrcode
     
     def extract_customer_shipment_details(self, df_shipment_batch: pd.DataFrame) -> pd.DataFrame:
         df_customer_shipment_details = df_shipment_batch.reindex(columns=[
@@ -215,8 +299,8 @@ class DataExtractor:
 
         return df_customer_shipment_details
     
-    def extract_test_commission_form_data(self, file_path: str) -> pd.DataFrame:
-        df = pd.read_csv(file_path)
+    def extract_test_commission_form_data(self, response_data: dict) -> pd.DataFrame:
+        df = pd.DataFrame(response_data['list'])
 
         df_test_commission_form = df[[
             '委托单号',

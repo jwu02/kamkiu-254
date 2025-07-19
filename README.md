@@ -34,3 +34,22 @@
         - but pandas tries to read a CSV file that's not actually encoded in UTF-8
     - 需要用另一个打开方式（记事本）来更改数据
 - 发货批次表 的排序优先：地区 -> 客户 -> 型号 -> 炉号 -> 发货数 -> 挤压批号 -> 时效批号
+
+## API
+- API response data format
+```
+{
+    "msg": "操作成功",
+    "code": 0,
+    "data": {
+        "titleList": [
+            {},
+            ...
+        ],
+        "list": [
+            {},
+            ...
+        ]
+    }
+}
+```
