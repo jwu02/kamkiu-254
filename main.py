@@ -61,8 +61,6 @@ class KamKiu254(QMainWindow):
         # 上传 发货批次表
         self.shipment_batch_layout = QHBoxLayout()
         self.shipment_batch_layout.addWidget(QLabel("发货批次表："))
-        self.shipment_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        self.shipment_batch_layout.addWidget(self.shipment_path_label)
         self.shipment_upload_button = QPushButton("读取 发货批次表")
         self.shipment_upload_button.clicked.connect(self.display_shipment_batch_data_full)
         self.shipment_batch_layout.addWidget(self.shipment_upload_button)
@@ -71,8 +69,6 @@ class KamKiu254(QMainWindow):
         # 上传 wtdmx 数据 
         self.mechanical_properties_layout = QHBoxLayout()
         self.mechanical_properties_layout.addWidget(QLabel("性能："))
-        self.mechanical_properties_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        self.mechanical_properties_layout.addWidget(self.mechanical_properties_path_label)
         self.mechanical_properties_upload_button = QPushButton("读取 机械性能")
         self.mechanical_properties_upload_button.clicked.connect(self.request_mechanical_properties_data)
         self.mechanical_properties_layout.addWidget(self.mechanical_properties_upload_button)
@@ -88,15 +84,13 @@ class KamKiu254(QMainWindow):
         self.composition_layout.addWidget(self.composition_upload_button)
         self.composition_layout.addStretch()
 
-        # # 上传 检测委托单 wtd1
-        # self.test_commission_form_layout = QHBoxLayout()
-        # self.test_commission_form_layout.addWidget(QLabel("检测委托单（wtd1）："))
-        # self.test_commission_form_path_label = QLabel(self.DOCUMENT_NOT_UPLOADED)
-        # self.test_commission_form_layout.addWidget(self.test_commission_form_path_label)
-        # self.test_commission_form_upload_button = QPushButton(self.UPLOAD_CSV)
-        # self.test_commission_form_upload_button.clicked.connect(self.request_test_commission_form_data)
-        # self.test_commission_form_layout.addWidget(self.test_commission_form_upload_button)
-        # self.test_commission_form_layout.addStretch()
+        # 上传 检测委托单 wtd1
+        self.test_commission_form_layout = QHBoxLayout()
+        self.test_commission_form_layout.addWidget(QLabel("检测委托单（wtd1）："))
+        self.test_commission_form_upload_button = QPushButton('读取 检测委托单')
+        self.test_commission_form_upload_button.clicked.connect(self.request_test_commission_form_data)
+        self.test_commission_form_layout.addWidget(self.test_commission_form_upload_button)
+        self.test_commission_form_layout.addStretch()
         
         # 其他功能
         self.other_functionalities_layout = QHBoxLayout()
@@ -128,7 +122,7 @@ class KamKiu254(QMainWindow):
         layout.addLayout(self.shipment_batch_layout)
         layout.addLayout(self.mechanical_properties_layout)
         layout.addLayout(self.composition_layout)
-        # layout.addLayout(self.test_commission_form_layout)
+        layout.addLayout(self.test_commission_form_layout)
         layout.addLayout(self.other_functionalities_layout)
         layout.addWidget(self.main_table)
 
@@ -164,7 +158,9 @@ class KamKiu254(QMainWindow):
 
             # self.display_dataframe(self.df_shipment_batch)
         except Exception as e:
-            self.shipment_path_label.setText(f"读取数据错误: {str(e)}")
+            msg = f"读取发货批次表数据出错: {str(e)}"
+            print(msg)
+            show_error(msg)
 
     def display_dataframe(self, df: pd.DataFrame):
         """
@@ -181,6 +177,34 @@ class KamKiu254(QMainWindow):
         
         self.main_table.resizeColumnsToContents()
     
+    def request_test_commission_form_data(self):
+        """
+        读取 检测委托单 数据
+        """
+        try:
+            model_code_list = self.df_shipment_batch['型号'].tolist()
+            ageing_furnace_code_list = self.df_shipment_batch['时效批号'].tolist()
+            smelt_furnace_code_list = self.df_shipment_batch['炉号'].tolist()
+
+            response_data = self.data_requester.request_test_commission_form(
+                model_code_list=model_code_list,
+                ageing_furnace_code_list=ageing_furnace_code_list
+            )
+            df_test_commission_form_ageing = self.data_extractor.extract_test_commission_form_data(response_data)
+
+            response_data = self.data_requester.request_test_commission_form(
+                model_code_list=model_code_list,
+                billet_furnace_code_list=smelt_furnace_code_list
+            )
+            df_test_commission_form_smelting = self.data_extractor.extract_test_commission_form_data(response_data)
+
+            self.df_test_commission_form = pd.concat([df_test_commission_form_ageing, df_test_commission_form_smelting])
+            
+        except Exception as e:
+            msg = f"读取检测委托单数据出错: {str(e)}"
+            print(msg)
+            show_error(msg)
+
     def request_mechanical_properties_data(self):
         """
         读取 机械性能 数据
@@ -202,10 +226,12 @@ class KamKiu254(QMainWindow):
             )
             df_mechanical_properties_smelting = self.data_extractor.extract_mechanical_properties_data(response_data)
 
-            self.df_mechanical_properties = pd.concat([df_mechanical_properties_ageing, df_mechanical_properties_smelting], axis=0)
+            self.df_mechanical_properties = pd.concat([df_mechanical_properties_ageing, df_mechanical_properties_smelting])
 
         except Exception as e:
-            self.mechanical_properties_path_label.setText(f"读取文件出错: {str(e)}")
+            msg = f"读取性能数据出错: {str(e)}"
+            print(msg)
+            show_error(msg)
     
     def display_report_generation_buttons(self):
         num_table_cols = self.main_table.columnCount()
@@ -220,10 +246,13 @@ class KamKiu254(QMainWindow):
             self.main_table.setCellWidget(index, num_table_cols, button)
     
     def generate_all_reports(self):
-        for index, row in self.df_shipment_batch.iterrows():
-            sb = ShipmentBatch(row)
+        try:
+            if self.df_test_commission_form is None:
+                self.request_test_commission_form_data()
+            
+            for index, row in self.df_shipment_batch.iterrows():
+                sb = ShipmentBatch(row)
 
-            try:
                 self.df_shipment_batch.at[index, '性能'] = self.data_checker.check_functional_conformance(sb, self.df_test_commission_form)
 
                 sb.generate_report(
@@ -235,27 +264,31 @@ class KamKiu254(QMainWindow):
                     self.u_part_report_functional_requirements
                 )
 
-                # show_info("Report generated at :")
-            # except NonConformantError as e:
-            #     self.df_shipment_batch.at[index, '性能'] = e.message
-            #     print(e)
-            except Exception as e:
-                # print errors to terminal so user don't get bombarded with popups
-                print(e)
-        
-        self.display_dataframe(self.df_shipment_batch)
-        show_info("生成完毕")
+            # show_info("Report generated at :")
+            self.display_dataframe(self.df_shipment_batch)
+            show_info("生成完毕")
+        # except NonConformantError as e:
+        #     self.df_shipment_batch.at[index, '性能'] = e.message
+        #     print(e)
+        except Exception as e:
+            msg = f"生成全部报告出错: {str(e)}"
+            print(msg)
+            show_error(msg)
         
     def safe_generate_report(self, index, row):
         sb = ShipmentBatch(row)
         output_report_path = None
 
-        self.df_shipment_batch.at[index, '性能'] = self.data_checker.check_functional_conformance(sb, self.df_test_commission_form)
-        
-        self.display_dataframe(self.df_shipment_batch)
-        self.display_report_generation_buttons()
-
         try:
+            if self.df_test_commission_form is None:
+                self.request_test_commission_form_data()
+
+            conformance_result = self.data_checker.check_functional_conformance(sb, self.df_test_commission_form)
+            self.df_shipment_batch.at[index, '性能'] = conformance_result
+            
+            self.display_dataframe(self.df_shipment_batch)
+            self.display_report_generation_buttons()
+
             output_report_path = sb.generate_report(
                 self.df_shipment_batch,
                 self.df_chemical_composition,
@@ -264,9 +297,16 @@ class KamKiu254(QMainWindow):
                 self.mid_plate_report_functional_requirements,
                 self.u_part_report_functional_requirements
             )
+        except NonConformantError as e:
+            msg = f"""{sb.model_code} {sb.casting_furnace_code} {sb.ageing_furnace_code} 有以下不合格数据：
+            {e.message}
+            """
+            print(msg)
+            show_error(msg)
         except Exception as e:
-            print(e)
-            show_error(str(e))
+            msg = f"生成报告出错: {str(e)}"
+            print(msg)
+            show_error(msg)
         finally:
             if output_report_path is not None:
                 show_info(f"报告成功生成：{output_report_path}")
@@ -290,7 +330,9 @@ class KamKiu254(QMainWindow):
 
             self.display_dataframe(self.df_chemical_composition)
         except Exception as e:
-            self.composition_path_label.setText(f"读取文件出错: {str(e)}")
+            msg = f"读取化学数据出错: {str(e)}"
+            print(msg)
+            show_error(msg)
     
     def setDesiredElements(self):
         try:
@@ -300,7 +342,9 @@ class KamKiu254(QMainWindow):
                 '下限': float 
             })
         except Exception as e:
-            show_error(f"读取文件出错: {str(e)}")
+            msg = f"读取成分元素条件数据出错: {str(e)}"
+            print(msg)
+            show_error(msg)
 
     def check_cpk_path(self):
         self.df_shipment_batch = self.data_checker.check_cpk_path(self.df_shipment_batch)
@@ -352,8 +396,13 @@ class KamKiu254(QMainWindow):
                 batch_quantities[model_code] = int(quantity)
             else:
                 batch_quantities[model_code] += int(quantity)
+
+        message = f"""
+            {folder}
+            {'\n'.join(f"{k}: {v}" for k, v in batch_quantities.items())}
+        """
         
-        show_info('\n'.join(f"{k}: {v}" for k, v in batch_quantities.items()))
+        show_info(message)
 
 
     def generate_customer_shipment_details(self):

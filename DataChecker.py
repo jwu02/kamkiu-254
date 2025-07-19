@@ -16,6 +16,8 @@ from constants import (
 
 from ShipmentBatch import ShipmentBatch
 
+from errors import NonConformantError
+
 class DataChecker:
     def __init__(self):
         self.cpk_tolerance_map = load_cpk_tolerance_map()
