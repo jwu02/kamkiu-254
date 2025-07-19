@@ -27,6 +27,13 @@
 - pip install -r requirements.txt
 - python main.py
 
+## Version Control
+- git remote add origin https://gitee.com/jwu02/kamkiu-254.git
+    - git remote add gitee https://gitee.com/jwu02/kamkiu-254.git
+- git remote rename origin gitee
+- git push -u github
+- git push -u gitee
+
 ## Notes
 - 用WPS表格更改过的 CSV 没办法上传上去 并报以下错误
     - 'utf-8' codec can't decode byte 0xbf in position 0; invalid start byte
