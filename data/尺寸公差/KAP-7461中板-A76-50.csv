@@ -1,0 +1,57 @@
+SPC,FAI,项目,描述,标准值,上公差,下公差,上上,上下,下上,下下
+SPC A-1,FAI 1-1,Cutting Length,Tolerance,156.76,0.15,0.15,0.1078,0.024,0.028,0.0144
+SPC A-2,FAI 1-2,Cutting Length,Tolerance,156.76,0.15,0.15,0.1036,0.024,0.028,0.0144
+SPC A-3,FAI 1-3,Cutting Length,Tolerance,156.76,0.15,0.15,0.1022,0.024,0.028,0.0144
+SPC A-4,FAI 1-4,Cutting Length,Tolerance,156.76,0.15,0.15,0.1036,0.018,0.028,0.0108
+SPC B-1,FAI 2-1,Width,Tolerance,81.38,0.15,0.15,0.112,0.021,0.028,0.0126
+SPC B-2,FAI 2-2,Width,Tolerance,81.38,0.15,0.15,0.112,0.021,0.028,0.0126
+SPC B-3,FAI 2-3,Width,Tolerance,81.38,0.15,0.15,0.112,0.021,0.028,0.0126
+SPC B-4,FAI 2-4,Width,Tolerance,81.38,0.15,0.15,0.112,0.021,0.028,0.0126
+SPC C,FAI 3,2D Barcode Location,Tolerance,3.68,0.8,0.8,0.427,0.15,0.168,0.09
+SPC D,FAI 4,2D Barcode Location,Tolerance,65.74,0.8,0.8,0.462,0.132,0.294,0.0792
+SPC E,FAI 5,2D Barcode Size,Tolerance,4,0.38,0.38,0.266,0.0918,0.0462,0.05508
+SPC F-1,FAI 6-1,Distance,Tolerance,5.27,0.15,0.15,0.091,0.0138,0.035,0.00828
+SPC F-2,FAI 6-2,Distance,Tolerance,5.27,0.15,0.15,0.091,0.0138,0.035,0.00828
+SPC G-1,FAI 7-1,Thickness,Tolerance,11.12,0.15,0.15,0.1022,0.021,0.0462,0.0126
+SPC G-2,FAI 7-2,Thickness,Tolerance,11.12,0.15,0.15,0.1022,0.021,0.0462,0.0126
+SPC G-3,FAI 7-3,Thickness,Tolerance,11.12,0.15,0.15,0.1022,0.021,0.0462,0.0126
+SPC G-4,FAI 7-4,Thickness,Tolerance,11.12,0.15,0.15,0.1022,0.021,0.0462,0.0126
+SPC J-1,FAI 10-1,Distance,Tolerance,9.09,0.15,0.15,0.098,0.024,0.056,0.0144
+SPC J-2,FAI 10-2,Distance,Tolerance,9.09,0.15,0.15,0.098,0.024,0.056,0.0144
+SPC K-1,FAI 11-1,Distance,Tolerance,72.28,0.15,0.15,0.0938,0.021,0.1022,0.0126
+SPC K-2,FAI 11-2,Distance,Tolerance,72.28,0.15,0.15,0.0938,0.021,0.1022,0.0126
+SPC M,FAI 13,Parallelism,Tolerance,0,0.1,0,0.063,0.0192,0.0434,0.01152
+SPC N,FAI 14,Parallelism,Tolerance,0,0.1,0,0.063,0.0192,0.035,0.01152
+SPC O,FAI 15,Flatness,Tolerance,0,0.1,0,0.0728,0.027,0.0364,0.0162
+SPC P,FAI 16,Perpendicularly,Tolerance,0,0.2,0,0.1218,0.027,0.0322,0.0162
+SPC Q,FAI 17,Parallelism,Tolerance,0,0.2,0,0.1722,0.027,0.049,0.0162
+SPC R,FAI 18,Perpendicularly,Tolerance,0,0.08,0,0.063,0.0192,0.035,0.01152
+SPC S,FAI 19,Flatness,Tolerance,0,0.2,0,0.1218,0.027,0.0294,0.0162
+SPC AF,FAI 32,2D Barcode Size,Tolerance,4,0.38,0.38,0.266,0.0918,0.0462,0.05508
+SPC AG-1,FAI 33-1,Line Profile(A＞B),Tolerance,0,0.35,0,0,0,0,0
+SPC AG-1-MAX,FAI 33-1-MAX,"Line Profile (A＞B),MAX",Tolerance,0,0.2,0.15,0.1148,0.0318,-0.042,0.01908
+SPC AG-1-MIN,FAI 33-1-MIN,"Line Profile(A＞B), MIN",Tolerance,0,0.2,0.15,-0.042,0,0.07,0
+SPC AG-2,FAI 33-2,Line Profile(A＞B),Tolerance,0,0.35,0,0,0,0,0
+SPC AG-2-MAX,FAI 33-2-MAX,"Line Profile (A＞B),MAX",Tolerance,0,0.2,0.15,0.1358,0.0318,-0.042,0.01908
+SPC AG-2-MIN,FAI 33-2-MIN,"Line Profile(A＞B), MIN",Tolerance,0,0.2,0.15,-0.042,0,0.07,0
+SPC AH-1,FAI 34-1,Line Profile(B＞c),Tolerance,0,0.35,0,0,0,0,0
+SPC AH-1-MAX,FAI 34-1-MAX,"Line Profile (B＞c),MAX",Tolerance,0,0.2,0.15,0.1218,0.0318,-0.042,0.01908
+SPC AH-1-MIN,FAI 34-1-MIN,"Line Profile(B＞c), MIN",Tolerance,0,0.2,0.15,-0.042,0,0.07,0
+SPC AH-2,FAI 34-2,Line Profile(B＞c),Tolerance,0,0.35,0,0,0,0,0
+SPC AH-2-MAX,FAI 34-2-MAX,"Line Profile(B＞c),MAX",Tolerance,0,0.2,0.15,0.1078,0.0318,-0.042,0.01908
+SPC AH-2-MIN,FAI 34-2-MIN,"Line Profile(B＞c), MIN",Tolerance,0,0.2,0.15,-0.042,0,0.07,0
+SPC AI-1,FAI 35-1,Line Profile(C＞D),Tolerance,0,0.35,0,0,0,0,0
+SPC AI-1-MAX,FAI 35-1-MAX,"Line Profile(C＞D),MAX",Tolerance,0,0.2,0.15,0.1218,0.0318,-0.042,0.01908
+SPC AI-1-MIN,FAI 35-1-MIN,"Line Profile(C＞D), MIN",Tolerance,0,0.2,0.15,-0.042,0,0.07,0
+SPC AI-2,FAI 35-2,Line Profile(C＞D),Tolerance,0,0.35,0,0,0,0,0
+SPC AI-2-MAX,FAI 35-2-MAX,"Line Profile(C＞D),MAX",Tolerance,0,0.2,0.15,0.1358,0.0318,-0.042,0.01908
+SPC AI-2-MIN,FAI 35-2-MIN,"Line Profile(C＞D), MIN",Tolerance,0,0.2,0.15,-0.042,0,0.07,0
+SPC AQ,FAI 43,Perpendicularly,Tolerance,0,0.2,0,0.1218,0.027,0.0252,0.0162
+SPC AV-1,FAI 49-1,Radius,Tolerance,1.5,0.15,0.15,0.084,0.021,0.0126,0.0126
+SPC AV-2,FAI 49-2,Radius,Tolerance,1.5,0.15,0.15,0.084,0.021,0.0126,0.0126
+SPC AW-1,FAI 50-1,Radius,Tolerance,1,0.15,0.15,0.084,0.021,0.0126,0.0126
+SPC AW-2,FAI 50-2,Radius,Tolerance,1,0.15,0.15,0.084,0.021,0.0126,0.0126
+SPC AW-3,FAI 50-3,Radius,Tolerance,1,0.15,0.15,0.084,0.021,0.0126,0.0126
+SPC AW-4,FAI 50-4,Radius,Tolerance,1,0.15,0.15,0.084,0.021,0.0126,0.0126
+SPC AX-1,FAI 51-1,Radius,Tolerance,1.5,0.15,0.15,0.084,0.021,0.0126,0.0126
+SPC AX-2,FAI 51-2,Radius,Tolerance,1.5,0.15,0.15,0.084,0.021,0.0126,0.0126

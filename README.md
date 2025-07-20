@@ -25,6 +25,7 @@
 - WINDOWS - venv\Scripts\activate
 - pip install -r requirements.txt
 - python main.py
+- pip freeze > requirements.txt
 
 ## Version Control
 - git remote add origin https://gitee.com/jwu02/kamkiu-254.git
